@@ -88,8 +88,7 @@
     </style>
 </head>
 <body>
-
-  <nav style="background-color: #000000; padding: 15px 0; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+     <nav style="background-color: #000000; padding: 15px 0; text-align: center; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
   <style>
     .nav-link { 
       color: #ffffff; 
@@ -112,6 +111,7 @@
   <a href="production-tracking.html" class="nav-link">Tracking</a>
   <a href="sales-order.html" class="nav-link">Sales Order</a>
 </nav>
+
 <div id="loginOverlay">
     <div class="login-box">
         <h2 style="color:#2c3e50; border:none; margin-bottom:20px;">Cedaar Textile Limited</h2>
@@ -306,10 +306,12 @@
 <script>
     const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
     
-    // --- CONFIGURE YOUR LOGIN HERE ---
-    const ADMIN_USER_ID = "admin";    // Change this
-    const ADMIN_PASSWORD = "Kp@123";   // Change this
-    // ---------------------------------
+    // --- CONFIGURE YOUR MULTIPLE LOGINS HERE ---
+    const VALID_USERS = {
+        "admin": "Kp@123",
+        "rajrm": "raj@123"
+    };
+    // -------------------------------------------
 
     let currentUser = "";
     let cachedReceipts = [];
@@ -324,8 +326,8 @@
         const id = document.getElementById('userId').value;
         const pass = document.getElementById('userPass').value;
 
-        // Custom Login Validation
-        if(id === ADMIN_USER_ID && pass === ADMIN_PASSWORD) {
+        // Validating from the list of valid users
+        if(VALID_USERS[id] && VALID_USERS[id] === pass) {
             currentUser = id;
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('loggedUserDisplay').innerText = "User: " + id.toUpperCase();
