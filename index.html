@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* --- ALL ORIGINAL STYLES UNCHANGED --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center; }
+        .login-card h2 { margin-top: 0; color: #2c3e50; border: none; padding: 0; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .login-btn:hover { background: #d35400; }
+        
+        #mainAppWrapper { display: none; }
+        #dashboard { display: flex; height: 100vh; background-image: url('Gemini_Generated_Image_pvg3hepvg3hepvg3.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed; }
+        .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.5); z-index: 2; }
+        .logo-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
+        .company-title-card { background: rgba(255, 255, 255, 0.85); padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); backdrop-filter: blur(5px); }
+        .company-name { font-size: 36px; font-weight: bold; color: #1a252f; margin: 0; }
+        .menu-title { font-size: 14px; color: #bdc3c7; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s ease; }
+        .nav-btn:hover { background: #e67e22; transform: translateX(8px); }
+        #productionApp { display: none; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #e67e22; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        .header-controls { display: flex; gap: 10px; background: #fff3e0; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffe0b2; align-items: flex-end; flex-wrap: wrap; }
+        .control-field { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        .btn-fetch { background: #d35400; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; height: 32px; transition: 0.3s; }
+        .btn-fetch:hover { background: #e67e22; }
+        .btn-refresh { background: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; height: 32px; transition: 0.3s; }
+        .btn-refresh:hover { background: #3498db; }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th { color: white; padding: 6px 2px; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        td { padding: 2px; border: 1px solid #dee2e6; text-align: center; }
+        input, select { width: 92%; padding: 4px; border: 1px solid #ced4da; border-radius: 3px; font-size: 10px; }
+        .data-po { width: 70px !important; }
+        .mc-label { font-weight: bold; color: #2c3e50; background: #f1f2f6; width: 60px; }
+        .prod-output { background: #e8f5e9 !important; border: none; text-align: center; font-weight: bold; color: #2e7d32; pointer-events: none; }
+        .prev-booked-box { background: #fce4ec; color: #c2185b; font-weight: bold; border: none; text-align: center; }
+        .ring-booked-box { background: #e8eaf6; color: #3f51b5; font-weight: bold; border: none; text-align: center; }
+        .mixing-booked-box { background: #e0f2f1; color: #00796b; font-weight: bold; border: none; text-align: center; }
+        .info-box { background: #e3f2fd; color: #1565c0; border: none; text-align: center; font-weight: bold; }
+        .placeholder-msg { text-align: center; padding: 40px; color: #95a5a6; font-style: italic; }
+        #detentionModal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal-content { background: white; margin: 10% auto; padding: 20px; border-radius: 10px; width: 300px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .footer { position: sticky; bottom: 0; background: white; padding: 15px; border-top: 2px solid #eee; text-align: right; margin-top: 15px; display: none; }
+        .btn-submit { background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-row-submit { background: #2980b9; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer; font-size: 9px; font-weight: bold; }
+        .btn-row-submit:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+        
+        /* NEW STYLE FOR ADD BUTTON */
+        .btn-add-row { background: white; color: white; border: none; border-radius: 3px; padding: 4px 6px; cursor: pointer; font-size: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
+        <p style="font-size: 12px; color: #7f8c8d; margin-bottom: 20px;">Please enter your credentials</p>
+        <input type="text" id="userInp" class="login-input" placeholder="Username">
+        <input type="password" id="passInp" class="login-input" placeholder="Password">
+        <button onclick="checkLogin()" class="login-btn">LOGIN</button>
+        <p id="loginError" style="color: red; font-size: 11px; margin-top: 10px; display: none;">Invalid Username or Password.</p>
+    </div>
+</div>
+
+<div id="mainAppWrapper">
+    <div id="dashboard">
+        <div class="sidebar">
+            <div class="menu-title">Main Menu</div>
+            <div id="activeUserInfo" style="font-size: 11px; color: #e67e22; margin-bottom: 10px; font-weight: bold;"></div>
+            <button class="nav-btn" onclick="showApp('production')">📊 Production Booking</button>
+            <button class="nav-btn" onclick="showDispatch()">🚚 Dispatch</button>
+            <button class="nav-btn" onclick="location.reload()" style="background: #c0392b; margin-top: 20px;">🔒 Logout</button>
+            <div style="margin-top: auto; font-size: 11px; text-align: center; color: #ecf0f1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+                <strong>Cedaar Textile Limited</strong><br>v2.0.28
+            </div>
+        </div>
+        <div class="logo-area">
+            <div class="company-title-card">
+                <h1 class="company-name">CEDAAR TEXTILE LIMITED</h1>
+                <p style="color: #d35400; margin-top: 5px; font-weight: bold; letter-spacing: 3px; font-size: 14px;">ENTERPRISE RESOURCE PLANNING</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="productionApp">
+        <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+        <div class="container">
+            <h2 id="appTitle">Production Booking</h2>
+            <div class="header-controls">
+                <div class="control-field"><label>Date</label><input type="date" id="batchDate"></div>
+                <div class="control-field" id="shiftFieldContainer"><label>Shift</label>
+                    <select id="batchShift"><option value="">-- Select Shift --</option><option value="A">Shift A</option><option value="B">Shift B</option><option value="C">Shift C</option></select>
+                </div>
+                <div class="control-field"><label>Department</label>
+                    <select id="formType" onchange="handleDeptChange()">
+                        <option value="">-- Select Department --</option>
+                        <optgroup label="Production" id="prodGroup">
+                            <option value="MIXING">Mixing</option><option value="PACKING">Packing</option><option value="RING">Ring</option><option value="AUTOCONER">Autoconer</option><option value="TFO">TFO</option><option value="SIMPLEX">Simplex</option><option value="DRAWFRAME">Drawframe</option><option value="CARDING">Carding</option>
+                        </optgroup>
+                        <optgroup label="Sales" id="saleGroup" style="display:none;"><option value="SALE">Dispatch (Sale)</option></optgroup>
+                    </select>
+                </div>
+                <button class="btn-fetch" onclick="fetchExistingProduction()">🔍 FETCH DATA</button>
+                <button class="btn-refresh" onclick="renderTable()">🔄 REFRESH TABLE</button>
+            </div>
+            <div id="welcomeMsg" class="placeholder-msg">Select a department and click "Fetch" to edit or enter new data.</div>
+            <table id="productionTable" style="display:none;"><thead><tr id="tableHeaderRow"></tr></thead><tbody id="machineTableBody"></tbody></table>
+            <div class="footer" id="formFooter"><button type="button" class="btn-submit" id="submitAllBtn" onclick="submitAllData()">SUBMIT ALL MACHINE DATA</button></div>
+        </div>
+    </div>
+</div>
+
+<div id="detentionModal"><div class="modal-content"><h3 id="modalTitle" style="color:#e67e22; margin-top:0;">Detention Selection</h3><div id="detentionOptions"></div><div style="text-align:right; margin-top:15px;"><button onclick="closeModal()" style="background:#2980b9; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">DONE</button></div></div></div>
+
+<script>
+    const users = [
+        { id: "prod", pass: "123", role: "Administrator" },
+        { id: "sale", pass: "heena@123", role: "Production" },
+        { id: "dalbir", pass: "123", role: "Production" },
+        { id: "sale1", pass: "123", role: "Dispatch" }
+    ];
+
+    let currentUser = ""; 
+    let globalCustomerList = [];
+    let globalRunningPOList = []; 
+    let specialPOList = [];      
+    let poDataCache = {}; 
+    let rowFetchCounter = {}; 
+    let rowIdSuffix = 0; // To handle duplicate machines
+
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+
+    function checkLogin() {
+        const u = document.getElementById('userInp').value;
+        const p = document.getElementById('passInp').value;
+        const found = users.find(x => x.id === u && x.pass === p);
+        if (found) {
+            currentUser = found.id;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainAppWrapper').style.display = 'block';
+            document.getElementById('activeUserInfo').innerText = `LOGGED AS: ${found.id.toUpperCase()} (${found.role})`;
+        } else { document.getElementById('loginError').style.display = 'block'; }
+    }
+
+    async function fetchRunningPOs() {
+        try {
+            const resp = await fetch(`${API_URL}?Department=SALE_ORDER`);
+            const data = await resp.json();
+            globalRunningPOList = data.filter(item => item["Status"] && item["Status"].toString().toUpperCase() === "RUNNING").map(item => item["PO ID"]).filter(Boolean);
+            specialPOList = data.filter(item => { const s = item["Status"] ? item["Status"].toString().toUpperCase() : ""; return s === "RUNNING" || s === "TO CLOSE"; }).map(item => item["PO ID"]).filter(Boolean);
+            populatePODropdowns();
+        } catch (e) { console.error("Error fetching Running POs:", e); }
+    }
+
+    function populatePODropdowns() {
+        const type = document.getElementById('formType').value;
+        const dropdowns = document.querySelectorAll('.data-po');
+        const listToUse = (type === 'SALE' || type === 'AUTOCONER' || type === 'PACKING' || type === 'TFO') ? specialPOList : globalRunningPOList;
+        dropdowns.forEach(select => {
+            const currentVal = select.value;
+            let options = `<option value="">-- Select PO --</option>`;
+            [...new Set(listToUse)].sort().forEach(po => { options += `<option value="${po}" ${currentVal == po ? 'selected' : ''}>${po}</option>`; });
+            select.innerHTML = options;
+        });
+    }
+
+    async function handleDeptChange() { renderTable(); await fetchRunningPOs(); }
+
+    function validateDate(selectedDateStr) {
+        if (!selectedDateStr) return false;
+        const selectedDate = new Date(selectedDateStr); selectedDate.setHours(0,0,0,0);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const threeDaysAgo = new Date(); threeDaysAgo.setDate(today.getDate() - 3); threeDaysAgo.setHours(0,0,0,0);
+        return (selectedDate >= threeDaysAgo && selectedDate <= today);
+    }
+
+    async function fetchCustomerList() {
+        try {
+            const resp = await fetch(`${API_URL}?Department=PARTY_MASTER`);
+            const data = await resp.json(); globalCustomerList = data.map(item => item["Party Name"]).filter(Boolean);
+            populateCustomerDropdowns();
+        } catch (e) { console.error("Error fetching Party Names:", e); }
+    }
+
+    function populateCustomerDropdowns() {
+        const dropdowns = document.querySelectorAll('.data-cust-name-dropdown');
+        dropdowns.forEach(select => {
+            let options = `<option value="">-- Select Party --</option>`;
+            globalCustomerList.forEach(name => { options += `<option value="${name}">${name}</option>`; });
+            select.innerHTML = options;
+        });
+    }
+
+    function showApp(appId) {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('productionApp').style.display = 'block';
+        document.getElementById('appTitle').innerText = "Production Booking";
+        document.getElementById('prodGroup').style.display = "block";
+        document.getElementById('saleGroup').style.display = "none";
+        document.getElementById('shiftFieldContainer').style.display = "flex";
+        document.getElementById('formType').value = ""; renderTable();
+    }
+
+    async function showDispatch() {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('productionApp').style.display = 'block';
+        document.getElementById('appTitle').innerText = "Dispatch Tracking";
+        document.getElementById('prodGroup').style.display = "none";
+        document.getElementById('saleGroup').style.display = "block";
+        document.getElementById('shiftFieldContainer').style.display = "none";
+        document.getElementById('formType').value = "SALE"; renderTable();
+        await fetchCustomerList(); await fetchRunningPOs();
+    }
+
+    function goBack() { document.getElementById('productionApp').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; }
+
+    const CONFIGS = {
+        MIXING: { start: 1, end: 1, prefix: "MX-", color: "#e67e22" },
+        PACKING: { start: 1, end: 1, prefix: "PK-", color: "#e67e22" },
+        RING: { start: 401, end: 437, prefix: "RF-", color: "#e67e22" },
+        AUTOCONER: { start: 1, end: 13, prefix: "AC-", color: "#e67e22" },
+        TFO: { start: 1, end: 13, prefix: "TF-", color: "#e67e22" },
+        SIMPLEX: { start: 1, end: 10, prefix: "SX-", color: "#2980b9" },
+        DRAWFRAME: { start: 1, end: 12, prefix: "DF-", color: "#8e44ad" },
+        CARDING: { 
+        machines: [
+            ...Array.from({length: 20}, (_, i) => `CR-${i + 1}`),
+            ...Array.from({length: 20}, (_, i) => `DK-${i + 1}`)
+        ], 
+        color: "#2c3e50" 
+    }, 
+        SALE: { start: 1, end: 1, prefix: "DS-", color: "#27ae60" }
+    };
+
+    const detentionReasons = ["Power Fail","Pressure low","As Per Program", "Labour Short", "Fire Case", "Lot Change", "Count Change", "RT Change", "Batch Change", "Maintenance Cleaning", "Maintenance Gauge", "Mechanical Fault", "Electrical Fault"];
+    let activeRowId = null;
+
+    function renderTable() {
+        const type = document.getElementById('formType').value;
+        if (!type) { 
+            document.getElementById('productionTable').style.display = "none"; 
+            document.getElementById('formFooter').style.display = "none";
+            document.getElementById('welcomeMsg').style.display = "block";
+            return; 
+        }
+        document.getElementById('productionTable').style.display = "table";
+        document.getElementById('formFooter').style.display = "block";
+        document.getElementById('welcomeMsg').style.display = "none";
+        
+        const config = CONFIGS[type];
+        let headerHtml = `<th style="background:#2c3e50; width:30px;">Add</th>`;
+        if (type === 'SALE') {
+            headerHtml += `<th style="background:${config.color}">MC #</th><th style="background:${config.color}">PO ID</th><th style="background:#1565c0">Customer Name</th><th style="background:#1565c0">Invoice Number</th><th style="background:#1565c0">Article</th><th style="background:#1565c0">Order Qnty</th><th style="background:#1565c0">Lot Number</th><th style="background:#c2185b">Prev. Sale</th><th style="background:#27ae60">Net WT</th><th style="background:#27ae60">Gross WT</th><th style="background:#27ae60">Bags</th><th style="background:#27ae60">Cones</th><th style="background:#27ae60">Reff. No.</th><th style="background:#2e7d32">Total Net WT</th><th style="background:#2e7d32">Total Gross WT</th><th style="background:#d35400">Sale Rate</th><th style="background:${config.color}">Remarks</th><th style="background:#2c3e50">Action</th>`;
+        } else {
+            headerHtml += `<th style="background:${config.color}">MC #</th><th style="background:${config.color}">PO ID</th><th style="background:#1565c0">Article</th><th style="background:#1565c0">Ord Qnty</th><th style="background:#1565c0">Lot Number</th>`;
+            if (type === 'MIXING' || type === 'PACKING' || type === 'CARDING') headerHtml += `<th style="background:#1565c0">Shade Reff..</th>`;
+            headerHtml += `<th style="background:#c2185b">Prev Book</th>`;
+            if (type !== 'MIXING') headerHtml += `<th style="background:#00796b">Mixing Book</th>`;
+            if (type !== 'CARDING' && type !== 'MIXING' && type !== 'PACKING') {
+                let cl = type === 'SIMPLEX' ? "Roving Hank" : type === 'DRAWFRAME' ? "Wraping" : "Count";
+                headerHtml += `<th style="background:${config.color}">${cl}</th>`;
+            }
+            if (type === 'RING' || type === 'AUTOCONER' || type === 'TFO') {
+                headerHtml += `<th style="background:${config.color}">Speed</th>`;
+                if (type !== 'AUTOCONER') headerHtml += `<th style="background:${config.color}">TPI</th>`;
+                let l = (type === 'AUTOCONER' || type === 'TFO') ? "Drum" : "Spindles";
+                headerHtml += `<th style="background:${config.color}">${l}</th>`;
+                if (type !== 'AUTOCONER' && type !== 'TFO') headerHtml += `<th style="background:${config.color}">Idol Sp..</th>`;
+                headerHtml += `<th style="background:${config.color}">Effi %</th>`;
+            } else if (type === 'SIMPLEX') headerHtml += `<th style="background:${config.color}">Spindles</th>`;
+            if (type === 'PACKING') { headerHtml += `<th style="background: #27ae60;">Net WT</th><th style="background: #27ae60;">Gross WT</th><th style="background: #27ae60;">Box</th><th style="background: #27ae60;">Cone</th><th style="background: #27ae60;">Reff. No.</th><th style="background: #2e7d32;">Total Net WT</th>`;
+            } else if (type !== 'AUTOCONER' && type !== 'TFO') {
+                let al = (type === 'RING' || type === 'SIMPLEX' || type === 'DRAWFRAME') ? "Actual Hank" : type === 'CARDING' ? "Actual KG" : "Issue Qnty";
+                headerHtml += `<th style="background: #27ae60;">${al}</th>`;
+            }
+            headerHtml += `<th style="background: #2e7d32;">${type === 'PACKING' ? "Total Gross WT" : "Prod (KG)"}</th>`;
+            if (type !== 'MIXING' && type !== 'PACKING') headerHtml += `<th style="background: #2980b9;">Det. Type</th><th style="background: #2980b9;">Min.</th>`;
+            headerHtml += `<th style="background:${config.color}">Remarks</th><th style="background:#2c3e50">Action</th>`;
+        }
+        document.getElementById('tableHeaderRow').innerHTML = headerHtml;
+        const tbody = document.getElementById('machineTableBody'); tbody.innerHTML = "";
+
+        let machineList = [];
+        if (config.machines) { machineList = config.machines; } else { for (let i = config.start; i <= config.end; i++) machineList.push(config.prefix + i); }
+
+        machineList.forEach(mcName => { createRow(mcName); });
+        if (type === 'SALE' && globalCustomerList.length > 0) populateCustomerDropdowns();
+        populatePODropdowns();
+    }
+
+    function createRow(mcName, afterElement = null) {
+        const type = document.getElementById('formType').value;
+        const config = CONFIGS[type];
+        const rowId = (afterElement) ? `row-${mcName}-${++rowIdSuffix}` : `row-${mcName}`;
+        const tr = document.createElement('tr');
+        tr.id = rowId; tr.dataset.mc = mcName;
+
+        const isSelectableArticle = (type === 'SALE' || type === 'PACKING' || type === 'TFO');
+        const artField = isSelectableArticle ? `<select class="data-article info-box" onchange="handleArticleSelection('${mcName}', '${rowId}')"><option value="">-- Article --</option></select>` : `<input type="text" class="data-article info-box" readonly>`;
+
+        let rowHtml = `<td><button class="btn-add-row" onclick="createRow('${mcName}', this.closest('tr'))">➕</button></td><td class="mc-label">${mcName}</td><td><select class="data-po" onchange="handlePOChange('${mcName}', '${rowId}')"></select></td>`;
+        
+        if (type === 'SALE') {
+            rowHtml += `<td><select class="data-cust-name-dropdown info-box"></select></td><td><input type="text" class="data-inv-num info-box"></td><td>${artField}</td><td><input type="text" class="data-ord-qnty info-box" readonly></td><td><input type="text" class="data-lot info-box" readonly></td><td><input type="text" class="prev-booked-box" readonly value="0.00"></td><td><input type="number" step="0.01" class="data-net" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" step="0.01" class="data-gross" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" class="data-box" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" class="data-cone"></td><td><input type="text" class="data-reff"></td><td><input type="text" class="data-prod prod-output" value="0.00" readonly></td><td><input type="text" class="data-total-gross prod-output" value="0.00" readonly></td><td><input type="number" step="0.01" class="data-sale-rate"></td><td><input type="text" class="data-remarks"></td><td><button class="btn-row-submit" id="btn-save-${rowId}" onclick="submitSingleMachine('${mcName}', '${rowId}')">SAVE</button></td>`;
+        } else {
+            let mcNum = parseInt(mcName.replace(/\D/g, '')) || 1;
+            let defSp = (type === 'RING' || type === 'AUTOCONER' || type === 'TFO' || type === 'MIXING' || type === 'PACKING') ? ((mcNum <= 427) ? 1008 : (mcNum <= 429) ? 1200 : 528) : (type === 'SIMPLEX' ? 120 : (type === 'DRAWFRAME' ? 2 : 1));
+            let drVal = (type === 'AUTOCONER' || type === 'TFO') ? "" : defSp;
+            let spRo = (type === 'AUTOCONER' || type === 'TFO') ? '' : 'readonly';
+
+            rowHtml += `<td>${artField}</td><td><input type="text" class="info-box data-ord-qnty" readonly></td><td><input type="text" class="info-box data-lot" readonly></td>`;
+            if (type === 'MIXING' || type === 'PACKING' || type === 'CARDING') rowHtml += `<td><input type="text" class="info-box data-shade-reff" readonly></td>`;
+            rowHtml += `<td><input type="text" class="prev-booked-box" readonly value="0.00"></td>`;
+            if (type !== 'MIXING') rowHtml += `<td><input type="text" class="data-mixing-total mixing-booked-box" readonly value="0.00"></td>`;
+            if (type !== 'CARDING' && type !== 'MIXING' && type !== 'PACKING') rowHtml += `<td><input type="number" class="data-count" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+            if (type === 'RING' || type === 'AUTOCONER' || type === 'TFO') {
+                rowHtml += `<td><input type="number" class="data-speed" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+                if (type !== 'AUTOCONER') rowHtml += `<td><input type="number" step="0.01" class="data-tpi" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+                rowHtml += `<td><input type="number" class="data-spindles" value="${drVal}" ${spRo} oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+                if (type !== 'AUTOCONER' && type !== 'TFO') rowHtml += `<td><input type="number" class="data-idol" value="0" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+                rowHtml += `<td><input type="number" step="0.1" class="data-effi" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+            } else if (type === 'SIMPLEX') rowHtml += `<td><input type="number" class="data-spindles" value="${defSp}" readonly></td>`;
+            if (type === 'PACKING') { rowHtml += `<td><input type="number" step="0.01" class="data-net" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" step="0.01" class="data-gross" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" class="data-box" oninput="calculateRow('${mcName}', '${rowId}')"></td><td><input type="number" class="data-cone"></td><td><input type="text" class="data-reff"></td><td><input type="text" class="data-prod prod-output" value="0.00" readonly></td>`;
+            } else if (type !== 'AUTOCONER' && type !== 'TFO') rowHtml += `<td><input type="number" step="0.001" class="data-hank" oninput="calculateRow('${mcName}', '${rowId}')"></td>`;
+            rowHtml += `<td><input type="text" class="${type === 'PACKING' ? 'data-total-gross' : 'data-prod'} prod-output" value="0.00" readonly></td>`;
+            if (type !== 'MIXING' && type !== 'PACKING') rowHtml += `<td><input type="text" class="data-det-type" onclick="openModal('${rowId}')" readonly></td><td><input type="number" class="data-det-min" value="0" readonly></td>`;
+            rowHtml += `<td><input type="text" class="data-remarks"></td><td><button class="btn-row-submit" id="btn-save-${rowId}" onclick="submitSingleMachine('${mcName}', '${rowId}')">SAVE</button></td>`;
+        }
+        
+        tr.innerHTML = rowHtml;
+        const tbody = document.getElementById('machineTableBody');
+        if (afterElement) { afterElement.after(tr); } else { tbody.appendChild(tr); }
+        
+        // Populate dropdowns for new row
+        if (type === 'SALE' && globalCustomerList.length > 0) {
+            let s = tr.querySelector('.data-cust-name-dropdown');
+            let o = `<option value="">-- Select Party --</option>`;
+            globalCustomerList.forEach(name => { o += `<option value="${name}">${name}</option>`; });
+            s.innerHTML = o;
+        }
+        const poSelect = tr.querySelector('.data-po');
+        const listToUse = (type === 'SALE' || type === 'AUTOCONER' || type === 'PACKING' || type === 'TFO') ? specialPOList : globalRunningPOList;
+        let pOptions = `<option value="">-- Select PO --</option>`;
+        [...new Set(listToUse)].sort().forEach(po => { pOptions += `<option value="${po}">${po}</option>`; });
+        poSelect.innerHTML = pOptions;
+    }
+
+    function setRowLoading(rowId, isLoading) {
+        const btn = document.getElementById(`btn-save-${rowId}`);
+        if (!btn) return;
+        if (isLoading) {
+            rowFetchCounter[rowId] = (rowFetchCounter[rowId] || 0) + 1;
+            btn.disabled = true; btn.innerText = "WAIT...";
+        } else {
+            rowFetchCounter[rowId] = Math.max(0, (rowFetchCounter[rowId] || 0) - 1);
+            if (rowFetchCounter[rowId] === 0) { btn.disabled = false; btn.innerText = "SAVE"; }
+        }
+    }
+
+    async function handlePOChange(mcName, rowId) {
+        const row = document.getElementById(rowId);
+        const currentPO = getValue(row, '.data-po').trim(); if (!currentPO) return;
+        setRowLoading(rowId, true);
+
+        // --- RESTORED AUTO-FILL LOGIC ---
+        const rows = document.querySelectorAll('#machineTableBody tr');
+        let sourceRow = null;
+        for (let r of rows) {
+            if (r.id !== rowId && r.querySelector('.data-po').value === currentPO) {
+                if (r.querySelector('.data-article').value !== "") { sourceRow = r; break; }
+            }
+        }
+
+        if (sourceRow) {
+            const fieldsToCopy = ['.data-count', '.data-speed', '.data-tpi', '.data-effi', '.data-hank', '.data-shade-reff', '.data-article'];
+            fieldsToCopy.forEach(selector => {
+                const sEl = sourceRow.querySelector(selector);
+                const tEl = row.querySelector(selector);
+                if (sEl && tEl) {
+                    if (sEl.tagName === 'SELECT') { tEl.innerHTML = sEl.innerHTML; tEl.value = sEl.value; } else { tEl.value = sEl.value; }
+                }
+            });
+            row.querySelector('.data-ord-qnty').value = sourceRow.querySelector('.data-ord-qnty').value;
+            if (row.querySelector('.data-lot')) row.querySelector('.data-lot').value = sourceRow.querySelector('.data-lot').value;
+            await fetchPrevProduction(mcName, rowId);
+        } else {
+            await fetchPODetails(mcName, rowId);
+            await fetchPrevProduction(mcName, rowId);
+        }
+        setRowLoading(rowId, false);
+    }
+
+    async function fetchPODetails(mcName, rowId) {
+        const row = document.getElementById(rowId);
+        const poID = getValue(row, '.data-po').trim();
+        const type = document.getElementById('formType').value;
+        const isSelectableDept = (type === 'SALE' || type === 'PACKING' || type === 'TFO');
+
+        try {
+            const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(poID)}&Department=SALE_ORDER`);
+            const data = await resp.json(); poDataCache[poID] = data;
+            if (data && data.length > 0) {
+                const artField = row.querySelector('.data-article');
+                if (isSelectableDept) {
+                    if (data.length === 1) { artField.innerHTML = `<option value="${data[0]["Article"]}">${data[0]["Article"]}</option>`; artField.value = data[0]["Article"]; handleArticleSelection(mcName, rowId);
+                    } else { artField.innerHTML = `<option value="">-- Article --</option>` + data.map(i => `<option value="${i["Article"]}">${i["Article"]}</option>`).join(''); }
+                } else {
+                    artField.value = data[0]["Article"] || "N/A";
+                    const totalQty = data.reduce((sum, item) => sum + (parseFloat(item["Order Qnty"]) || 0), 0);
+                    row.querySelector('.data-ord-qnty').value = totalQty.toFixed(2);
+                    if(row.querySelector('.data-lot')) row.querySelector('.data-lot').value = data[0]["Lot Number"] || "N/A";
+                    if(row.querySelector('.data-shade-reff')) row.querySelector('.data-shade-reff').value = data[0]["Shade Reff."] || "N/A";
+                }
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function handleArticleSelection(mcName, rowId) {
+        const row = document.getElementById(rowId);
+        const poID = getValue(row, '.data-po');
+        const article = getValue(row, '.data-article');
+        const items = poDataCache[poID] || [];
+        const match = items.find(i => i["Article"] === article);
+        if (match) {
+            row.querySelector('.data-ord-qnty').value = match["Order Qnty"] || "0";
+            if(row.querySelector('.data-lot')) row.querySelector('.data-lot').value = match["Lot Number"] || "N/A";
+            if(row.querySelector('.data-shade-reff')) row.querySelector('.data-shade-reff').value = match["Shade Reff."] || "N/A";
+            setRowLoading(rowId, true);
+            await fetchPrevProduction(mcName, rowId);
+            setRowLoading(rowId, false);
+        }
+    }
+
+    function getValue(row, selector, defaultValue = "") { const el = row.querySelector(selector); return el ? el.value : defaultValue; }
+
+    async function fetchPrevProduction(mcName, rowId) {
+        const row = document.getElementById(rowId);
+        const poID = getValue(row, '.data-po').trim();
+        const article = getValue(row, '.data-article').trim(); 
+        const currentDept = document.getElementById('formType').value;
+        const isSelectableArticle = (currentDept === 'SALE' || currentDept === 'PACKING' || currentDept === 'TFO');
+        if (!poID || (isSelectableArticle && !article)) return;
+
+        try {
+            const url = `${API_URL}?POID=${encodeURIComponent(poID)}&Article=${encodeURIComponent(article)}&Department=${encodeURIComponent(currentDept)}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            row.querySelector('.prev-booked-box').value = (Array.isArray(data)) ? data.reduce((acc, entry) => acc + (parseFloat(entry["Actual Production"]) || 0), 0).toFixed(2) : "0.00";
+        } catch (e) { row.querySelector('.prev-booked-box').value = "0.00"; }
+
+        if (currentDept !== 'MIXING' && currentDept !== 'SALE') {
+            try {
+                const mixUrl = `${API_URL}?POID=${encodeURIComponent(poID)}&Department=MIXING`;
+                const mixResp = await fetch(mixUrl);
+                const mixData = await mixResp.json();
+                row.querySelector('.data-mixing-total').value = (Array.isArray(mixData)) ? mixData.reduce((acc, entry) => acc + (parseFloat(entry["Actual Production"]) || 0), 0).toFixed(2) : "0.00";
+            } catch (e) { row.querySelector('.data-mixing-total').value = "0.00"; }
+        }
+    }
+
+    async function submitSingleMachine(mcName, rowId) {
+        const row = document.getElementById(rowId); const btn = row.querySelector('.btn-row-submit');
+        const type = document.getElementById('formType').value; const dateVal = document.getElementById('batchDate').value;
+        const shiftVal = document.getElementById('batchShift').value; const po = getValue(row, '.data-po');
+
+        if (!dateVal || !shiftVal || !type) return alert("Select Date, Shift and Department first");
+        if (!validateDate(dateVal)) return alert("Date must be within 3 days.");
+        if (!po) return alert("Select PO ID first");
+
+        const inputs = row.querySelectorAll('input, select');
+        for (let input of inputs) {
+            if (input.classList.contains('data-remarks') || input.classList.contains('data-det-type') || input.classList.contains('data-det-min')) continue;
+            if (input.value.trim() === "") { input.style.border = "2px solid red"; alert(`Fill all fields for ${mcName}.`); return; } else { input.style.border = "1px solid #ced4da"; }
+        }
+
+        btn.disabled = true; btn.innerText = "...";
+        const entry = { "User": currentUser, "Date": dateVal, "Department": type, "Production Shift": shiftVal, "Machine Number": mcName, "PO ID": po, "Customer Name": (type === 'SALE' ? getValue(row, '.data-cust-name-dropdown') : ""), "Invoice Number": getValue(row, '.data-inv-num'), "Article": getValue(row, '.data-article'), "Order Qnty": getValue(row, '.data-ord-qnty'), "Lot Number": getValue(row, '.data-lot'), "Shade Reff.": getValue(row, '.data-shade-reff'), "Actual Production": getValue(row, '.data-prod', "0"), "Total Net WT": getValue(row, '.data-prod', "0"), "Total Gross WT": getValue(row, '.data-total-gross', "0"), "Count": getValue(row, '.data-count', "0"), "Machine Speed": getValue(row, '.data-speed', "0"), "Machine TPI": getValue(row, '.data-tpi', "0"), "Actual Hank": getValue(row, '.data-hank', "0"), "Number of Spindles": getValue(row, '.data-spindles', "1"), "Idol Spindles": getValue(row, '.data-idol', "0"), "Efficiency %": getValue(row, '.data-effi', "0"), "Detention Type": getValue(row, '.data-det-type'), "Detention Minutes": getValue(row, '.data-det-min', "0"), "Remarks": getValue(row, '.data-remarks'), "Gross WT": getValue(row, '.data-gross', "0"), "Net WT": getValue(row, '.data-net', "0"), "Box": getValue(row, '.data-box', "0"), "Cone": getValue(row, '.data-cone', "0"), "Reff No": getValue(row, '.data-reff'), "Sale Rate": getValue(row, '.data-sale-rate', "0") };
+
+        try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: [entry] }) }); btn.innerText = "SAVED"; btn.style.background = "#27ae60"; } catch (e) { alert("Save Error"); btn.disabled = false; btn.innerText = "SAVE"; }
+    }
+
+    async function submitAllData() {
+        const rows = document.querySelectorAll('#machineTableBody tr'); 
+        const type = document.getElementById('formType').value;
+        const dateVal = document.getElementById('batchDate').value; const shiftVal = document.getElementById('batchShift').value;
+        if (!dateVal || !shiftVal || !type) return alert("Select Date, Shift and Department first");
+
+        let allEntries = [];
+        for (let row of rows) {
+            const po = getValue(row, '.data-po');
+            if (po) { 
+                if (rowFetchCounter[row.id] > 0) return alert(`Please wait for Machine ${row.dataset.mc} to finish loading.`);
+                const inputs = row.querySelectorAll('input, select');
+                let isRowValid = true;
+                for (let input of inputs) { if (input.classList.contains('data-remarks') || input.classList.contains('data-det-type') || input.classList.contains('data-det-min')) continue; if (input.value.trim() === "") { isRowValid = false; input.style.border = "2px solid red"; } }
+                if (!isRowValid) { alert(`Machine ${row.dataset.mc} missing fields.`); return; }
+                allEntries.push({ "User": currentUser, "Date": dateVal, "Department": type, "Production Shift": shiftVal, "Machine Number": row.dataset.mc, "PO ID": po, "Customer Name": (type === 'SALE' ? getValue(row, '.data-cust-name-dropdown') : ""), "Invoice Number": getValue(row, '.data-inv-num'), "Article": getValue(row, '.data-article'), "Order Qnty": getValue(row, '.data-ord-qnty'), "Lot Number": getValue(row, '.data-lot'), "Shade Reff.": getValue(row, '.data-shade-reff'), "Actual Production": getValue(row, '.data-prod', "0"), "Total Net WT": getValue(row, '.data-prod', "0"), "Total Gross WT": getValue(row, '.data-total-gross', "0"), "Count": getValue(row, '.data-count', "0"), "Machine Speed": getValue(row, '.data-speed', "0"), "Machine TPI": getValue(row, '.data-tpi', "0"), "Actual Hank": getValue(row, '.data-hank', "0"), "Number of Spindles": getValue(row, '.data-spindles', "1"), "Idol Spindles": getValue(row, '.data-idol', "0"), "Efficiency %": getValue(row, '.data-effi', "0"), "Detention Type": getValue(row, '.data-det-type'), "Detention Minutes": getValue(row, '.data-det-min', "0"), "Remarks": getValue(row, '.data-remarks'), "Gross WT": getValue(row, '.data-gross', "0"), "Net WT": getValue(row, '.data-net', "0"), "Box": getValue(row, '.data-box', "0"), "Cone": getValue(row, '.data-cone', "0"), "Reff No": getValue(row, '.data-reff'), "Sale Rate": getValue(row, '.data-sale-rate', "0") }); 
+            }
+        }
+        if (allEntries.length === 0) return alert("Fill PO IDs.");
+        document.getElementById('submitAllBtn').disabled = true;
+        try { await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: allEntries }) }); alert("Success!"); renderTable(); } catch (e) { alert("Failed."); }
+        document.getElementById('submitAllBtn').disabled = false;
+    }
+
+    function calculateRow(mcName, rowId) {
+        const row = document.getElementById(rowId); const type = document.getElementById('formType').value;
+        if (type === 'PACKING' || type === 'SALE') {
+            const net = parseFloat(getValue(row, '.data-net', "0")), gross = parseFloat(getValue(row, '.data-gross', "0")), box = parseFloat(getValue(row, '.data-box', "0"));
+            row.querySelector('.data-prod').value = (net * box).toFixed(2); row.querySelector('.data-total-gross').value = (gross * box).toFixed(2); return;
+        }
+        const speed = parseFloat(getValue(row, '.data-speed', "0")), count = parseFloat(getValue(row, '.data-count', "0")), tpi = parseFloat(getValue(row, '.data-tpi', "0")), spindles = parseFloat(getValue(row, '.data-spindles', "0")), idol = parseFloat(getValue(row, '.data-idol', "0")), effi = parseFloat(getValue(row, '.data-effi', "0")), hank = parseFloat(getValue(row, '.data-hank', "0"));
+        let res = 0;
+        if (type === 'TFO' && count > 0 && tpi > 0) res = (speed * 0.144) /( count /2)/ tpi * (spindles - idol) * (effi / 1000);
+        else if (type === 'AUTOCONER' && count > 0) res = (speed * 0.283 / count) * (effi / 100) * (spindles - idol);
+        else if (type === 'CARDING' || type === 'MIXING') res = hank; 
+        else if (type === 'DRAWFRAME' && count > 0) res = (hank / 2.2) / count;
+        else if (type === 'SIMPLEX' && count > 0) res = (hank / 2.2 / count) * spindles;
+        else if (type === 'RING' && count > 0) res = (hank * (spindles - idol)) / 2.2 / count * (effi / 100);
+        row.querySelector('.data-prod').value = res.toFixed(2);
+    }
+
+    function openModal(rowId) {
+        activeRowId = rowId; const container = document.getElementById('detentionOptions');
+        container.innerHTML = detentionReasons.map(r => `<div style="display:flex; justify-content:space-between; margin-bottom:1px;"><label>${r}</label><input type="checkbox" id="chk-${r}"><input type="number" id="min-${r}" style="width:50px;"></div>`).join('');
+        document.getElementById('detentionModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        const row = document.getElementById(activeRowId); let selected = [], total = 0;
+        detentionReasons.forEach(r => { if (document.getElementById(`chk-${r}`).checked) { const mins = parseInt(document.getElementById(`min-${r}`).value) || 0; selected.push(`${r}(${mins})`); total += mins; } });
+        row.querySelector('.data-det-type').value = selected.join(","); row.querySelector('.data-det-min').value = total;
+        document.getElementById('detentionModal').style.display = 'none';
+    }
+</script>
+</body>
+</html>

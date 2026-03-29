@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+/* --- LOGIN OVERLAY STYLES --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; text-align: center;
+        }
+        .login-box input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+        .login-btn { width: 100%; padding: 12px; background: #1565c0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }        
+/* Dashboard Styles */
+        #dashboard { 
+            display: flex; 
+            height: 100vh; 
+            
+            background-size: cover; 
+            background-position: center; 
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
+        .sidebar { 
+            width: 300px; 
+            background: rgba(44, 62, 80, 0.9); 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5); 
+            z-index: 2;
+        }
+
+        .logo-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 20px;
+        }
+        
+        .company-title-card {
+            background: rgba(255, 255, 255, 0.85); 
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .dashboard-logo {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .company-name { font-size: 36px; font-weight: bold; color: #1a252f; margin: 0; }
+        
+        .menu-title { font-size: 14px; color: #bdc3c7; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s ease; }
+        .nav-btn:hover { background: #1565c0; transform: translateX(8px); }
+        .disabled-btn { opacity: 0.5; cursor: not-allowed; border: 1px dashed #7f8c8d; }
+
+        /* App View Styles */
+        #saleOrderApp, #fiberIssueApp { display: none; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #2196f3; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        
+        .header-controls { display: flex; gap: 15px; padding: 12px; border-radius: 8px; margin-bottom: 15px; align-items: flex-end; }
+        .control-field { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        
+        .btn-fetch { background: #1565c0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; height: 32px; transition: 0.3s; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
+        th { background: #2980b9; color: white; padding: 8px; text-align: center; }
+        td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
+        input, select { width: 95%; padding: 6px; border: 1px solid #ced4da; border-radius: 3px; font-size: 12px; }
+        
+        .btn-submit { background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-row-update { background: #2c3e50; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: bold; }
+        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+
+        .so-list-area { margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
+        .so-table th { background: #2c3e50; }
+        
+        .table-find-control { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .table-find-input { width: 200px !important; border: 2px solid #2c3e50 !important; }
+
+        /* Fiber Issue Specific Styles */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .add-row-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-bottom: 10px; font-size: 12px; }
+        
+        @media print {
+            @page { size: landscape; margin: 10mm; }
+            body * { visibility: hidden; }
+            #printSection, #printSection * { visibility: visible; }
+            #printSection { 
+                position: absolute; left: 0; top: 0; width: 100%; 
+                display: block !important; background: white; color: black;
+                font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+            }
+        }
+        input[readonly].fixed-date { background-color: #e9ecef; cursor: not-allowed; border: 1px solid #adb5bd; }
+    </style>
+</head>
+<body>
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color:#2c3e50; border:none; margin-bottom:20px;">Cedaar Textile Limited</h2>
+        <input type="text" id="userId" placeholder="User ID">
+        <input type="password" id="userPass" placeholder="Password">
+        <button class="login-btn" onclick="handleLogin()">LOGIN</button>
+        <p id="loginError" style="color:red; font-size:12px; display:none; margin-top:10px;">Invalid Credentials</p>
+    </div>
+</div>
+<div id="dashboard">
+    <div class="sidebar">
+        <div class="menu-title">Main Menu</div>
+        <button class="nav-btn" onclick="showApp('saleOrder')">📦 Sale Order</button>
+        <button class="nav-btn" onclick="showApp('fiberIssue')">🧶 Fiber Issue</button>
+        <button class="nav-btn disabled-btn">📊 Production (Disabled)</button>
+        <button class="nav-btn disabled-btn">🛒 Inventory Management</button>
+        
+        <div style="margin-top: auto; font-size: 11px; text-align: center; color: #ecf0f1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+            <strong id="loggedUserDisplay">Cedaar Textile Limited</strong><br>Sales Module v2.0
+        </div>
+    </div>
+    <div class="logo-area">
+        <div class="company-title-card">
+            <h1 class="company-name">CEDAAR TEXTILE LIMITED</h1>
+            <p style="color: #1565c0; margin-top: 5px; font-weight: bold; letter-spacing: 3px; font-size: 14px;">SALES ORDER MANAGEMENT</p>
+        </div>
+    </div>
+</div>
+
+<div id="fiberIssueApp">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <h2>Fiber Issue Management</h2>
+        
+        <div class="header-controls" style="background:#fff3e0; border: 1px solid #ff9800;">
+            <div class="control-field">
+                <label>Search Order by PO ID</label>
+                <input type="text" id="fiSearchInput" placeholder="Enter PO ID to fetch..." style="width:250px;">
+            </div>
+            <button class="btn-fetch" onclick="fetchOrderForFiber()" style="background:#ff9800">🔍 FETCH ORDER</button>
+        </div>
+
+        <form id="fiForm">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding: 20px;">
+                <div class="form-group"><label>Date</label><input type="date" id="fiDate" readonly class="fixed-date"></div>
+                <div class="form-group"><label>Slip No (Sequential)</label><input type="text" id="fiSlipNo" readonly placeholder="Auto-generating..."></div>
+                <div class="form-group"><label>PO ID</label><input type="text" id="fiPOID" readonly></div>
+                <div class="form-group"><label>Article</label><input type="text" id="fiArticle" readonly></div>
+                <div class="form-group"><label>Lot Number</label><input type="text" id="fiLot" readonly></div>
+                <div class="form-group"><label>Order Qnty</label><input type="number" id="fiOrderQnty" readonly></div>
+                <div class="form-group"><label>Shade Reff.</label><input type="text" id="fiShade" readonly></div>
+            </div>
+            <div style="text-align: right; padding: 20px;">
+                <button type="button" class="btn-submit" onclick="openFiberModal()" style="background:#e67e22">ADD FIBER DETAILS</button>
+            </div>
+        </form>
+
+        <div class="so-list-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin:0;">Recent Fiber Issues</h3>
+                <div class="table-find-control">
+                    <label style="color:#e67e22; margin:0;">FIND SLIP / PO:</label>
+                    <input type="text" id="fiFilterInput" class="table-find-input" placeholder="Search history..." onkeyup="filterFiberTable()" style="border-color:#e67e22 !important;">
+                </div>
+            </div>
+            <table class="so-table" id="fiberTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Slip No</th>
+                        <th>PO ID</th>
+                        <th>Article</th>
+                        <th>Lot No</th>
+                        <th>Order Qnty</th>
+                        <th>Issue Article</th>
+                        <th>Issue Qnty</th>
+                        <th>Issue %</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fiberListBody">
+                    <tr><td colspan="10">Loading history...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="fiberModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top: 0; color: #e67e22; border-bottom: 2px solid #eee; padding-bottom: 10px;">Multi-Fiber Issue Details</h3>
+        
+        <div style="margin-bottom: 15px; background: #fff3e0; padding: 10px; border-radius: 8px;">
+            <label style="font-size: 12px;">Total Requirement (Waste %):</label>
+            <input type="number" id="commonWaste" value="100" oninput="recalculateAllFiberRows()" style="width: 80px; margin-left: 10px; font-weight: bold;">
+            <span style="font-size: 11px; color: #666;"> (e.g., 95 for 5% waste)</span>
+        </div>
+
+        <button class="add-row-btn" onclick="addFiberRow()">+ Add More Fiber</button>
+        <div style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; padding: 5px;">
+            <table id="multiFiberTable">
+                <thead>
+                    <tr style="background:#f39c12">
+                        <th style="width: 35%;">Fiber Article</th>
+                        <th style="width: 25%;">% Issue (of Total)</th>
+                        <th style="width: 30%;">Issue Qnty (kg)</th>
+                        <th style="width: 10%;">X</th>
+                    </tr>
+                </thead>
+                <tbody id="multiFiberBody"></tbody>
+            </table>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-submit" onclick="submitFiberIssue()" style="flex:1">CONFIRM & SAVE ALL</button>
+            <button class="btn-submit" onclick="closeFiberModal()" style="background:#95a5a6; flex:1">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<div id="saleOrderApp">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <h2>Sale Order Booking</h2>
+        <div class="header-controls" style="background:#e3f2fd; border: solid 1px #2196f3;">
+            <div class="control-field">
+                <label>Fetch From Database by PO ID</label>
+                <input type="text" id="soSearchInput" placeholder="Enter PO ID to fetch..." style="width:250px;">
+            </div>
+            <button class="btn-fetch" onclick="searchSaleOrderByPO()">🔍 FETCH ORDER</button>
+            <button class="btn-fetch" onclick="updateSaleOrderStatus()" style="background:#2c3e50">🔄 UPDATE ORDER</button>
+        </div>
+        <form id="soForm">
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+                <div class="form-group"><label>Date</label><input type="date" id="soDate" readonly class="fixed-date" required></div>
+                <div class="form-group"><label>PO ID (Auto/Search)</label><input type="text" id="soPOID" readonly placeholder="Auto-generated"></div>
+                <div class="form-group"><label>Entity</label><select id="soEntity" required><option value="">-- Select --</option><option value="SPINNING">SPINNING</option><option value="DYE HOUSE">DYE HOUSE</option></select></div>
+                <div class="form-group"><label>Order For</label><select id="soType" required><option value="">-- Select --</option><option value="DOMESTIC">DOMESTIC</option><option value="EXPORT">EXPORT</option></select></div>
+                <div class="form-group"><label>Party Name</label><input type="text" id="soParty" list="partyList" placeholder="Search Party..." required><datalist id="partyList"></datalist></div>
+                <div class="form-group"><label>Responsible Person</label><input type="text" id="soPerson" placeholder="Name" required></div>
+                <div class="form-group"><label>Status</label>
+                    <select id="soStatus" required>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="RUNNING">RUNNING</option>
+                        <option value="TO CLOSE">TO CLOSE</option>
+                        <option value="CLOSE">CLOSE</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Packing Type</label><select id="soPacking" required><option value="">-- Select --</option><option value="BAG NUTRAL">BAG NUTRAL</option><option value="BAG REGULAR">BAG REGULAR</option><option value="CARTOON REGULAR">CARTOON REGULAR</option><option value="CARTOON NUTRAL">CARTOON NUTRAL</option><option value="PELLET">PELLET</option></select></div>
+                <div class="form-group" style="grid-column: span 1;"><label>Remarks</label><input type="text" id="soRemarks" placeholder="Notes"></div>
+            </div>
+
+            <div style="padding: 0 20px 20px 20px;">
+                <h3 style="font-size: 14px; color: #1565c0; border-bottom: 1px solid #ddd; padding-bottom: 5px;">Article Details</h3>
+                <button type="button" class="add-row-btn" onclick="addSaleArticleRow()" style="background:#2196f3">+ Add Article</button>
+                <table id="soArticleTable">
+                    <thead>
+                        <tr style="background: #ecf0f1;">
+                            <th>Article Description</th>
+                            <th>Lot Number</th>
+                            <th>Shade Reff.</th>
+                            <th>Order Qnty (kg)</th>
+                            <th>Sale Rate</th>
+                            <th>Costing</th>
+                            <th>X</th>
+                        </tr>
+                    </thead>
+                    <tbody id="soArticleBody"></tbody>
+                </table>
+            </div>
+
+            <div style="text-align: right; padding: 20px;"><button type="submit" class="btn-submit" id="soSubmitBtn" onclick="submitSaleOrder()">BOOK NEW ORDER</button></div>
+        </form>
+        <datalist id="articleList"></datalist>
+
+        <div class="so-list-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">Recent Orders (Latest 100)</h3>
+                <div class="table-find-control">
+                    <label style="color:#2c3e50; margin:0;">FILTER:</label>
+                    <input type="text" id="screenPOFilter" class="table-find-input" placeholder="By PO ID..." onkeyup="findPOOnScreen()">
+                    <select id="screenStatusFilter" onchange="findPOOnScreen()" style="width: 120px; border: 2px solid #2c3e50; font-weight: bold;">
+                        <option value="">All Status</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="RUNNING">RUNNING</option>
+                        <option value="TO CLOSE">TO CLOSE</option>
+                        <option value="CLOSE">CLOSE</option>
+                    </select>
+                </div>
+            </div>
+            <table class="so-table" id="ordersTable">
+                <thead><tr><th>Date</th><th>PO ID</th><th>Party</th><th>Article</th><th>Lot Number</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody id="soListBody"><tr><td colspan="7">Loading orders...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="printSection" style="display:none; padding: 20px;"></div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+    let globalFiberHistory = [];
+
+    function getCurrentLocalDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatSafeDate(dateInput) {
+        if (!dateInput) return "";
+        const dateObj = new Date(dateInput);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    let currentUser = "";
+    const USERS = { "admin": "cedaar123", "sale": "heena@123", "mdc": "mdc@123" };
+
+    function handleLogin() {
+        const id = document.getElementById('userId').value;
+        const pass = document.getElementById('userPass').value;
+        if (USERS[id] && USERS[id] === pass) {
+            currentUser = id;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loggedUserDisplay').innerText = "Logged User: " + id.toUpperCase();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+        }
+    }
+    
+    function showApp(appId) {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('saleOrderApp').style.display = 'none';
+        document.getElementById('fiberIssueApp').style.display = 'none';
+        const todayDate = getCurrentLocalDate();
+        if (appId === 'saleOrder') {
+            document.getElementById('saleOrderApp').style.display = 'block';
+            document.getElementById('soDate').value = todayDate;
+            document.getElementById('soArticleBody').innerHTML = "";
+            addSaleArticleRow();
+            loadSaleOrderList(); 
+            loadMasterData();
+        } else if (appId === 'fiberIssue') {
+            document.getElementById('fiberIssueApp').style.display = 'block';
+            document.getElementById('fiDate').value = todayDate;
+            loadFiberIssueList();
+            loadMasterData();
+        }
+    }
+
+    function addSaleArticleRow() {
+        const tbody = document.getElementById('soArticleBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="row-art" list="articleList" placeholder="Search Article..." required></td>
+            <td><input type="text" class="row-lot" placeholder="Lot #"></td>
+            <td><input type="text" class="row-shade" placeholder="Shade" required></td>
+            <td><input type="number" class="row-qty" placeholder="Qty" required></td>
+            <td><input type="number" class="row-rate" placeholder="Rate" required></td>
+            <td><input type="number" class="row-cost" placeholder="Cost"></td>
+            <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; cursor:pointer; background:none; border:none; font-weight:bold;">X</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    // --- UPDATED FIBER ISSUE FETCH LOGIC ---
+    async function fetchOrderForFiber() {
+        const poId = document.getElementById('fiSearchInput').value.trim();
+        if(!poId) return alert("Enter PO ID");
+        try {
+            const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(poId)}&Department=SALE_ORDER`);
+            const data = await resp.json();
+            if(data && data.length > 0) {
+                // Combine multi-articles and sum quantities
+                const articles = data.map(item => item["Article"]).join(", ");
+                const totalQty = data.reduce((sum, item) => sum + (parseFloat(item["Order Qnty"]) || 0), 0);
+                const firstLot = data[0]["Lot Number"] || "";
+                const firstShade = data[0]["Shade Reff."] || "";
+
+                document.getElementById('fiPOID').value = data[0]["PO ID"];
+                document.getElementById('fiArticle').value = articles;
+                document.getElementById('fiLot').value = firstLot;
+                document.getElementById('fiOrderQnty').value = totalQty;
+                document.getElementById('fiShade').value = firstShade;
+
+                let maxNum = 17;
+                globalFiberHistory.forEach(row => {
+                    let num = parseInt(String(row["Slip No"]).replace(/\D/g, ''));
+                    if(!isNaN(num) && num > maxNum) maxNum = num;
+                });
+                document.getElementById('fiSlipNo').value = (maxNum + 1).toString();
+                alert("Order data fetched and combined.");
+            } else { alert("PO ID not found."); }
+        } catch (e) { alert("Fetch failed."); }
+    }
+
+    function openFiberModal() {
+        if(!document.getElementById('fiPOID').value) return alert("Fetch an order first.");
+        if(document.getElementById('multiFiberBody').innerHTML === "") addFiberRow();
+        document.getElementById('fiberModal').style.display = 'block';
+    }
+
+    function addFiberRow() {
+        const tbody = document.getElementById('multiFiberBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="popArt" list="articleList" placeholder="Select Fiber Article"></td>
+            <td><input type="number" class="popPer" placeholder="e.g. 30" oninput="calculateFiberQty(this)"></td>
+            <td><input type="number" class="popQty" readonly style="background:#f9f9f9; font-weight:bold;"></td>
+            <td><button onclick="this.parentElement.parentElement.remove()" style="color:red; cursor:pointer; background:none; border:none; font-weight:bold;">X</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+    function closeFiberModal() { document.getElementById('fiberModal').style.display = 'none'; }
+
+    function calculateFiberQty(input) {
+        const orderQty = parseFloat(document.getElementById('fiOrderQnty').value) || 0;
+        const wasteFactor = parseFloat(document.getElementById('commonWaste').value) || 100;
+        const fiberPercent = parseFloat(input.value) || 0;
+        const qtyField = input.parentElement.nextElementSibling.querySelector('input');
+        if (orderQty > 0) {
+            const totalRequirement = orderQty / (wasteFactor / 100);
+            const result = (totalRequirement * (fiberPercent / 100)).toFixed(2);
+            qtyField.value = result;
+        }
+    }
+
+    function recalculateAllFiberRows() {
+        const percentInputs = document.querySelectorAll('.popPer');
+        percentInputs.forEach(input => calculateFiberQty(input));
+    }
+
+    async function submitFiberIssue() {
+        const rows = document.querySelectorAll('#multiFiberBody tr');
+        if(rows.length === 0) return alert("Add at least one fiber.");
+        const slipNo = document.getElementById('fiSlipNo').value;
+        const isEditMode = globalFiberHistory.some(x => String(x["Slip No"]) === String(slipNo));
+        const deptHeader = isEditMode ? "FIBER_ISSUE_UPDATE" : "FIBER_ISSUE";
+        let allEntries = [];
+        rows.forEach(row => {
+            const art = row.querySelector('.popArt').value;
+            const per = row.querySelector('.popPer').value;
+            const qty = row.querySelector('.popQty').value;
+            if(art && qty) {
+                allEntries.push({
+                    "Date": document.getElementById('fiDate').value,
+                    "Slip No": slipNo,
+                    "PO ID": document.getElementById('fiPOID').value,
+                    "Article": document.getElementById('fiArticle').value,
+                    "Lot Number": document.getElementById('fiLot').value,
+                    "Order Qnty": document.getElementById('fiOrderQnty').value,
+                    "Shade Reff.": document.getElementById('fiShade').value,
+                    "Issue Article": art,
+                    "Issue Qnty": qty,
+                    "Issue %": per,
+                    "User": currentUser,
+                    "Department": deptHeader 
+                });
+            }
+        });
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: allEntries }) });
+            alert(isEditMode ? "Slip Updated Successfully!" : "Slip Saved Successfully!");
+            closeFiberModal();
+            document.getElementById('fiForm').reset();
+            document.getElementById('fiDate').value = getCurrentLocalDate();
+            document.getElementById('multiFiberBody').innerHTML = "";
+            loadFiberIssueList(); 
+        } catch (e) { alert("Error saving slip."); }
+    }
+
+    async function loadFiberIssueList() {
+        const tbody = document.getElementById('fiberListBody');
+        try {
+            const resp = await fetch(`${API_URL}?Department=FIBER_ISSUE`);
+            const data = await resp.json();
+            globalFiberHistory = data || [];
+            tbody.innerHTML = "";
+            if(!data || data.length === 0) { tbody.innerHTML = "<tr><td colspan='10'>No history found.</td></tr>"; return; }
+            data.reverse().forEach(item => {
+                const cleanDate = formatSafeDate(item["Date"]);
+                tbody.innerHTML += `<tr>
+                    <td>${cleanDate}</td>
+                    <td style="font-weight:bold">${item["Slip No"]}</td>
+                    <td>${item["PO ID"]}</td>
+                    <td>${item["Article"]}</td>
+                    <td>${item["Lot Number"]}</td>
+                    <td>${item["Order Qnty"]}</td>
+                    <td>${item["Issue Article"]}</td>
+                    <td>${item["Issue Qnty"]}</td>
+                    <td>${item["Issue %"]}</td>
+                    <td>
+                        <button class="btn-row-update" onclick="editFiberIssue('${item["Slip No"]}')">EDIT</button>
+                        <button class="btn-row-update" onclick="printIssueSlip('${item["Slip No"]}')" style="background:#e67e22">PRINT</button>
+                    </td>
+                </tr>`;
+            });
+        } catch (e) { tbody.innerHTML = "<tr><td colspan='10'>Error loading data.</td></tr>"; }
+    }
+
+    function editFiberIssue(slipNo) {
+        const group = globalFiberHistory.filter(x => x["Slip No"] == slipNo);
+        if(group.length === 0) return;
+        const main = group[0];
+        document.getElementById('fiDate').value = formatSafeDate(main["Date"]);
+        document.getElementById('fiSlipNo').value = main["Slip No"];
+        document.getElementById('fiPOID').value = main["PO ID"];
+        document.getElementById('fiArticle').value = main["Article"];
+        document.getElementById('fiLot').value = main["Lot Number"];
+        document.getElementById('fiOrderQnty').value = main["Order Qnty"];
+        document.getElementById('fiShade').value = main["Shade Reff."];
+        const tbody = document.getElementById('multiFiberBody');
+        tbody.innerHTML = "";
+        group.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" class="popArt" value="${entry["Issue Article"]}"></td>
+                <td><input type="number" class="popWaste" value="${((parseFloat(entry["Issue Qnty"])/parseFloat(main["Order Qnty"]))*100).toFixed(2)}" oninput="calculateWaste(this)"></td>
+                <td><input type="number" class="popQty" value="${entry["Issue Qnty"]}" oninput="calculateRowPercent(this)"></td>
+                <td><input type="text" class="popPer" value="${entry["Issue %"]}" readonly style="background:#f9f9f9"></td>
+                <td><button onclick="this.parentElement.parentElement.remove()" style="color:red; background:none; border:none; font-weight:bold;">X</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+        document.getElementById('fiberModal').style.display = 'block';
+    }
+
+    async function printIssueSlip(slipNo) {
+        const group = globalFiberHistory.filter(x => x["Slip No"] == slipNo);
+        if(group.length === 0) return;
+        const main = group[0];
+        const cleanDate = formatSafeDate(main["Date"]);
+        let partyName = "Loading...";
+        try {
+            const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(main["PO ID"])}&Department=SALE_ORDER`);
+            const data = await resp.json();
+            if(data && data.length > 0) { partyName = data[0]["Party Name"] || "N/A"; } else { partyName = "Not Found"; }
+        } catch (e) { partyName = "Error Fetching"; }
+        const totalReqKg = group.reduce((sum, item) => sum + parseFloat(item["Issue Qnty"] || 0), 0).toFixed(2);
+        let rowsHtml = "";
+        group.forEach(item => {
+            rowsHtml += `<tr>
+                <td style="border:1px solid #000; padding:6px; text-align:left; font-size:13px; font-weight:bold;">${item["Issue Article"]}</td>
+                <td style="border:1px solid #000; padding:6px; font-weight:900; font-size:14px;">${item["Issue Qnty"]} KG</td>
+                <td style="border:1px solid #000; padding:6px; font-size:13px;">${item["Issue %"]}</td>
+            </tr>`;
+        });
+        const printDiv = document.getElementById('printSection');
+        printDiv.innerHTML = `
+            <div class="print-wrapper" style="width:100%; border:2px solid #000; padding:15px; box-sizing:border-box; font-family: 'Segoe UI', Arial, sans-serif;">
+                <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+                    <tr>
+                        <td style="width:10%; text-align:left;"><img src="https://i.ibb.co/qY70XvD3/logo.png" style="width:60px; height:auto;" alt="Logo"></td>
+                        <td style="width:60%; text-align:left;"><h1 style="margin:0; font-size:24px; font-weight:900; letter-spacing:1px;">CEDAAR TEXTILE LIMITED</h1><p style="margin:2px 0; font-size:14px; font-weight:bold; color:#333; text-transform:uppercase;">Fiber Issue Slip</p></td>
+                        <td style="width:30%; text-align:right; font-size:14px; line-height:1.2;"><p style="margin:0;"><strong>SLIP NO:</strong> <span style="font-size:14px;font-weight:bold; color:#333;">${main["Slip No"]}</span></p><p style="margin:0;"><strong>DATE:</strong> ${cleanDate}</p></td>
+                    </tr>
+                </table>
+                <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:5px; margin-bottom:15px; border:1px solid #000; padding:10px; background:#f9f9f9;">
+                    <div style="border-right:1px solid #ccc;"><label style="font-size:12px; font-weight:bold; color:#777;">PO ID</label><br><strong style="font-size:13px;">${main["PO ID"]}</strong></div>
+                    <div style="border-right:1px solid #ccc;"><label style="font-size:12px; font-weight:bold; color:#777;">PARTY NAME</label><br><strong style="font-size:13px;">${partyName}</strong></div>
+                    <div style="border-right:1px solid #ccc;"><label style="font-size:12px; font-weight:bold; color:#777;">YARN ARTICLE</label><br><strong style="font-size:13px;">${main["Article"]}</strong></div>
+                    <div style="border-right:1px solid #ccc;"><label style="font-size:12px; font-weight:bold; color:#777;">ORD QTY</label><br><strong style="font-size:13px;">${main["Order Qnty"]} KG</strong></div>
+                    <div style="border-right:1px solid #ccc;"><label style="font-size:12px; font-weight:bold; color:#777;">SHADE</label><br><strong style="font-size:13px;">${main["Shade Reff."]}</strong></div>
+                    <div style="background:#e8f4fd;"><label style="font-size:12px; font-weight:bold; color:#777;">TOTAL ISSUE</label><br><strong style="font-size:14px; color:#0056b3;">${totalReqKg} KG</strong></div>
+                </div>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:20px; text-align:center;">
+                    <thead><tr style="background:#2c3e50; color:white;"><th style="border:1px solid #000; color:#fff;padding:8px; font-size:13px;">FIBER ARTICLE DESCRIPTION</th><th style="border:1px solid #000; color:#fff;padding:8px; font-size:13px;">ISSUE QUANTITY</th><th style="border:1px solid #000; color:#fff;padding:8px; font-size:13px;">FIBER %</th></tr></thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+                <table style="width:100%; margin-top:30px;">
+                    <tr>
+                        <td style="width:33%; text-align:center;"><div style="font-weight:bold; font-size:13px; margin-bottom:2px;">Raghvendra Pal</div><div style="border-top:1px solid #000; width:120px; margin:auto;"></div><p style="font-weight:bold; font-size:11px; margin-top:5px;">Prepared By</p></td>
+                        <td style="width:33%; text-align:center;"><div style="border-top:1px solid #000; width:120px; margin:auto;"></div><p style="font-weight:bold; font-size:11px; margin-top:5px;">Checked By</p></td>
+                        <td style="width:33%; text-align:center;"><div style="border-top:1px solid #000; width:120px; margin:auto;"></div><p style="font-weight:bold; font-size:11px; margin-top:5px;">Authorized Signature</p></td>
+                    </tr>
+                </table>
+            </div>
+        `;
+        window.print();
+    }
+
+    function filterFiberTable() {
+        const input = document.getElementById("fiFilterInput");
+        const filter = input.value.toUpperCase();
+        const tr = document.getElementById("fiberTable").getElementsByTagName("tr");
+        for (let i = 1; i < tr.length; i++) {
+            let slip = tr[i].getElementsByTagName("td")[1].textContent || "";
+            let po = tr[i].getElementsByTagName("td")[2].textContent || "";
+            tr[i].style.display = (slip.toUpperCase().includes(filter) || po.toUpperCase().includes(filter)) ? "" : "none";
+        }
+    }
+
+    async function loadMasterData() {
+        try {
+            const resp = await fetch(`${API_URL}?Master=GET_MASTERS`);
+            const masters = await resp.json();
+            const pList = document.getElementById('partyList');
+            const aList = document.getElementById('articleList');
+            if (pList) {
+                pList.innerHTML = "";
+                if (masters.parties) masters.parties.forEach(p => { 
+                    let o = document.createElement('option'); o.value = p; pList.appendChild(o); 
+                });
+            }
+            if (aList) {
+                aList.innerHTML = "";
+                if (masters.articles) masters.articles.forEach(a => { 
+                    let o = document.createElement('option'); o.value = a; aList.appendChild(o); 
+                });
+            }
+        } catch (e) { console.log("Master load error"); }
+    }
+
+    function goBack() {
+        document.getElementById('saleOrderApp').style.display = 'none';
+        document.getElementById('fiberIssueApp').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+    }
+
+    function findPOOnScreen() {
+        const poFilter = document.getElementById("screenPOFilter").value.toUpperCase();
+        const statusFilter = document.getElementById("screenStatusFilter").value.toUpperCase();
+        const table = document.getElementById("ordersTable");
+        const tr = table.getElementsByTagName("tr");
+        for (let i = 1; i < tr.length; i++) {
+            const poCell = tr[i].getElementsByTagName("td")[1];
+            const statusDropdown = tr[i].querySelector(".list-status");
+            if (poCell && statusDropdown) {
+                const poText = poCell.textContent || poCell.innerText;
+                const statusValue = statusDropdown.value.toUpperCase();
+                const matchesPO = poText.toUpperCase().indexOf(poFilter) > -1;
+                const matchesStatus = (statusFilter === "" || statusValue === statusFilter);
+                tr[i].style.display = (matchesPO && matchesStatus) ? "" : "none";
+            }
+        }
+    }
+
+    async function loadSaleOrderList() {
+        const tbody = document.getElementById('soListBody');
+        try {
+            const resp = await fetch(`${API_URL}?Department=SALE_ORDER`);
+            const data = await resp.json();
+            tbody.innerHTML = "";
+            const latestData = data.slice(-150).reverse();
+            latestData.forEach(item => {
+                const poId = item["PO ID"];
+                const status = item["Status"] || "ACTIVE";
+                const cleanDate = formatSafeDate(item["Date"]);
+                const row = `<tr id="list-row-${poId}">
+                    <td>${cleanDate}</td>
+                    <td style="font-weight:bold">${poId}</td>
+                    <td>${item["Party Name"]}</td>
+                    <td>${item["Article"]}</td>
+                    <td><input type="text" class="list-lot" value="${item["Lot Number"] || ""}" style="width:80px; padding:2px;"></td>
+                    <td>
+                        <select class="list-status" onchange="findPOOnScreen()" style="width:90px; padding:2px; font-weight:bold;">
+                            <option value="ACTIVE" ${status === 'ACTIVE' ? 'selected' : ''}>ACTIVE</option>
+                            <option value="RUNNING" ${status === 'RUNNING' ? 'selected' : ''}>RUNNING</option>
+                            <option value="TO CLOSE" ${status === 'TO CLOSE' ? 'selected' : ''}>TO CLOSE</option>
+                            <option value="CLOSE" ${status === 'CLOSE' ? 'selected' : ''}>CLOSE</option>
+                        </select>
+                    </td>
+                    <td><button class="btn-row-update" onclick="updateListEntry('${poId}')">UPDATE</button></td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        } catch (e) { tbody.innerHTML = "<tr><td colspan='7'>Failed to load data.</td></tr>"; }
+    }
+
+    async function updateListEntry(poId) {
+        const row = document.getElementById(`list-row-${poId}`);
+        const lot = row.querySelector('.list-lot').value;
+        const status = row.querySelector('.list-status').value;
+        const btn = row.querySelector('.btn-row-update');
+        btn.disabled = true; btn.innerText = "SAVING...";
+        const updateData = { "PO ID": poId, "Status": status, "Lot Number": lot, "User": currentUser, "Department": "SALE_ORDER_UPDATE" };
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: [updateData] }) });
+            btn.innerText = "DONE"; btn.style.background = "#27ae60";
+            setTimeout(() => { btn.disabled = false; btn.innerText = "UPDATE"; btn.style.background = "#2c3e50"; }, 2000);
+        } catch (e) { alert("Update failed."); btn.disabled = false; btn.innerText = "UPDATE"; }
+    }
+
+    async function searchSaleOrderByPO() {
+        const poId = document.getElementById('soSearchInput').value.trim();
+        if(!poId) return alert("Enter PO ID");
+        try {
+            const resp = await fetch(`${API_URL}?POID=${encodeURIComponent(poId)}&Department=SALE_ORDER`);
+            const data = await resp.json();
+            if(data && data.length > 0) {
+                const item = data[0];
+                document.getElementById('soDate').value = formatSafeDate(item["Date"]);
+                document.getElementById('soPOID').value = item["PO ID"];
+                document.getElementById('soEntity').value = item["Entity"];
+                document.getElementById('soType').value = item["Order For"];
+                document.getElementById('soParty').value = item["Party Name"];
+                document.getElementById('soPacking').value = item["Packing Type"];
+                document.getElementById('soPerson').value = item["Responsible Person"];
+                document.getElementById('soStatus').value = item["Status"] || "ACTIVE";
+                document.getElementById('soRemarks').value = item["Remarks"];
+                
+                const tbody = document.getElementById('soArticleBody');
+                tbody.innerHTML = "";
+                data.forEach(article => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><input type="text" class="row-art" list="articleList" value="${article["Article"]}" required></td>
+                        <td><input type="text" class="row-lot" value="${article["Lot Number"] || ""}"></td>
+                        <td><input type="text" class="row-shade" value="${article["Shade Reff."]}" required></td>
+                        <td><input type="number" class="row-qty" value="${article["Order Qnty"]}" required></td>
+                        <td><input type="number" class="row-rate" value="${article["Sale Rate"] || article["Rate"]}" required></td>
+                        <td><input type="number" class="row-cost" value="${article["Costing"] || ""}"></td>
+                        <td><button type="button" onclick="this.parentElement.parentElement.remove()" style="color:red; cursor:pointer; background:none; border:none; font-weight:bold;">X</button></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                alert("Order Data Loaded.");
+            } else { alert("Order not found."); }
+        } catch (e) { alert("Search failed."); }
+    }
+
+    async function updateSaleOrderStatus() {
+        const poId = document.getElementById('soPOID').value;
+        if(!poId) return alert("Fetch an order first.");
+        const rows = document.querySelectorAll('#soArticleBody tr');
+        let allEntries = [];
+        rows.forEach(row => {
+            allEntries.push({
+                "PO ID": poId,
+                "Date": document.getElementById('soDate').value,
+                "Entity": document.getElementById('soEntity').value,
+                "Order For": document.getElementById('soType').value,
+                "Party Name": document.getElementById('soParty').value,
+                "Article": row.querySelector('.row-art').value,
+                "Lot Number": row.querySelector('.row-lot').value,
+                "Shade Reff.": row.querySelector('.row-shade').value,
+                "Order Qnty": row.querySelector('.row-qty').value,
+                "Costing": row.querySelector('.row-cost').value,
+                "Sale Rate": row.querySelector('.row-rate').value,
+                "Packing Type": document.getElementById('soPacking').value,
+                "Responsible Person": document.getElementById('soPerson').value,
+                "Status": document.getElementById('soStatus').value,
+                "Remarks": document.getElementById('soRemarks').value,
+                "User": currentUser,
+                "Department": "SALE_ORDER_UPDATE"
+            });
+        });
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: allEntries }) });
+            alert("Order Fully Updated!"); 
+            loadSaleOrderList();
+        } catch (e) { alert("Update failed."); }
+    }
+
+    async function submitSaleOrder() {
+        const form = document.getElementById('soForm');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const artRows = document.querySelectorAll('#soArticleBody tr');
+        if(artRows.length === 0) return alert("Add at least one article.");
+        const btn = document.getElementById('soSubmitBtn');
+        const rows = document.getElementById('soListBody').getElementsByTagName('tr');
+        let maxPO = 56000; 
+        for (let i = 0; i < rows.length; i++) {
+            let poCell = rows[i].getElementsByTagName('td')[1];
+            if (poCell) {
+                let poNum = parseInt(poCell.innerText.replace('PO-', ''));
+                if (!isNaN(poNum) && poNum > maxPO) maxPO = poNum;
+            }
+        }
+        const autoPOID = (maxPO + 1);
+        let allData = [];
+        artRows.forEach(row => {
+            allData.push({
+                "Date": document.getElementById('soDate').value,
+                "PO ID": autoPOID,
+                "Entity": document.getElementById('soEntity').value,
+                "Order For": document.getElementById('soType').value,
+                "Party Name": document.getElementById('soParty').value,
+                "Article": row.querySelector('.row-art').value,
+                "Lot Number": row.querySelector('.row-lot').value,
+                "Shade Reff." : row.querySelector('.row-shade').value,
+                "Order Qnty": row.querySelector('.row-qty').value,
+                "Costing": row.querySelector('.row-cost').value,
+                "Sale Rate": row.querySelector('.row-rate').value,
+                "Packing Type": document.getElementById('soPacking').value,
+                "Responsible Person": document.getElementById('soPerson').value,
+                "Status": document.getElementById('soStatus').value,
+                "Remarks": document.getElementById('soRemarks').value,
+                "User": currentUser,
+                "Department": "SALE_ORDER"
+            });
+        });
+        btn.disabled = true;
+        try {
+            await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ data: allData }) });
+            alert("Order Booked! PO ID: " + autoPOID);
+            form.reset();
+            document.getElementById('soDate').value = getCurrentLocalDate();
+            document.getElementById('soArticleBody').innerHTML = "";
+            addSaleArticleRow();
+            btn.disabled = false;
+            loadSaleOrderList(); 
+        } catch (e) { alert("Booking failed."); btn.disabled = false; }
+    }
+</script></body>
+</html>

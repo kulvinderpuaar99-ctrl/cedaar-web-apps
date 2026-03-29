@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+/* --- ALL ORIGINAL STYLES UNCHANGED --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 62, 80, 0.98);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 10000;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; text-align: center;
+        }
+        .login-box input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+        .login-btn { width: 100%; padding: 12px; background: #1565c0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }        
+/* Dashboard Styles */
+        #dashboard { 
+            display: flex; 
+            height: 100vh; 
+            background-size: cover; 
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
+        .sidebar { 
+            width: 300px; 
+            background: rgba(44, 62, 80, 0.9); 
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 4px 0 15px rgba(0,0,0,0.5); 
+            z-index: 2;
+        }
+
+        .logo-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            text-align: center; 
+            padding: 20px;
+        }
+        
+        .company-title-card {
+            background: rgba(255, 255, 255, 0.85); 
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .company-name { font-size: 36px; font-weight: bold; color: #1a252f; margin: 0; }
+        .menu-title { font-size: 14px; color: #bdc3c7; text-transform: uppercase; margin-bottom: 20px; border-bottom: 1px solid #5d6d7e; padding-bottom: 10px; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.3s ease; }
+        .nav-btn:hover { background: #1565c0; transform: translateX(8px); }
+        .disabled-btn { opacity: 0.5; cursor: not-allowed; border: 1px dashed #7f8c8d; }
+
+        #saleOrderApp, #fiberIssueApp, #productionSummaryApp { display: none; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #2196f3; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        
+        .header-controls { display: flex; gap: 15px; padding: 12px; border-radius: 8px; margin-bottom: 15px; align-items: flex-end; }
+        .control-field { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: bold; color: #636e72; margin-bottom: 3px; text-transform: uppercase; }
+        
+        .btn-fetch { background: #1565c0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 10px; height: 32px; transition: 0.3s; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
+        th { background: #2980b9; color: white; padding: 8px; text-align: center; }
+        td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
+        input, select { width: 95%; padding: 6px; border: 1px solid #ced4da; border-radius: 3px; font-size: 12px; }
+        
+        .btn-submit { background: #27ae60; color: white; padding: 10px 30px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-row-update { background: #2c3e50; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 9px; font-weight: bold; }
+        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+
+        .so-list-area { margin-top: 25px; border-top: 2px solid #eee; padding-top: 20px; }
+        .so-table th { background: #2c3e50; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 12px; width: 90%; max-width: 900px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2 style="color:#2c3e50; border:none; margin-bottom:20px;">Cedaar Textile Limited</h2>
+        <input type="text" id="userId" placeholder="User ID">
+        <input type="password" id="userPass" placeholder="Password">
+        <button class="login-btn" onclick="handleLogin()">LOGIN</button>
+        <p id="loginError" style="color:red; font-size:12px; display:none; margin-top:10px;">Invalid Credentials</p>
+    </div>
+</div>
+<div id="dashboard">
+    <div class="sidebar">
+        <div class="menu-title">Main Menu</div>
+                <button class="nav-btn" onclick="showApp('productionSummary')">📊 Production Summary</button>
+        <button class="nav-btn disabled-btn">🛒 Inventory Management</button>
+        <div style="margin-top: auto; font-size: 11px; text-align: center; color: #ecf0f1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px;">
+            <strong id="loggedUserDisplay">Cedaar Textile Limited</strong><br>Sales Module v2.0
+        </div>
+    </div>
+    <div class="logo-area">
+        <div class="company-title-card">
+            <h1 class="company-name">CEDAAR TEXTILE LIMITED</h1>
+            <p style="color: #1565c0; margin-top: 5px; font-weight: bold; letter-spacing: 3px; font-size: 14px;">SALES ORDER MANAGEMENT</p>
+        </div>
+    </div>
+</div>
+
+<div id="fiberIssueApp">...</div>
+<div id="saleOrderApp">...</div>
+
+<div id="productionSummaryApp">
+    <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+    <div class="container">
+        <h2>Production Summary Track</h2>
+        <div class="header-controls" style="background:#e8f5e9; border: 1px solid #4caf50;">
+            <div class="control-field">
+                <label>Filter Summary by PO / Article / Party / Status</label>
+                <input type="text" id="prodSearchInput" placeholder="Type to filter..." onkeyup="filterProductionTable()" style="width:250px;">
+            </div>
+            <button class="btn-fetch" onclick="loadProductionSummary()" style="background:#4caf50">🔄 REFRESH DATA</button>
+        </div>
+        <div class="so-list-area">
+            <div style="overflow-x: auto;">
+                <table class="so-table" id="productionTable">
+                    <thead>
+                        <tr style="background: #2e7d32;">
+                            <th>PO ID</th>
+                            <th>Status</th>
+                            <th>Party Name</th>
+                            <th>Article</th>
+                            <th>Lot No</th>
+                            <th>Order Qnty</th>
+                            <th>Mixing</th>
+                            <th>Carding</th>
+                            <th>Drawframe</th>
+                            <th>Simplex</th>
+                            <th>Ring</th>
+                            <th>Autoconer</th>
+                            <th>TFO</th>
+                            <th>Packing</th>
+                            <th>Sale</th>
+                            <th style="background:#d35400;">Recovery %</th>
+                        </tr>
+                    </thead>
+                    <tbody id="prodSummaryBody">
+                        <tr><td colspan="16">Fetching departmental data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+    let globalFiberHistory = [];
+    let currentUser = "";
+    const USERS = { "admin": "cedaar123", "sale": "heena@123", "mdc": "mdc@123" };
+
+    function handleLogin() {
+        const id = document.getElementById('userId').value;
+        const pass = document.getElementById('userPass').value;
+        if (USERS[id] && USERS[id] === pass) {
+            currentUser = id;
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('loggedUserDisplay').innerText = "Logged User: " + id.toUpperCase();
+        } else { document.getElementById('loginError').style.display = 'block'; }
+    }
+
+    function showApp(appId) {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('saleOrderApp').style.display = 'none';
+        document.getElementById('fiberIssueApp').style.display = 'none';
+        document.getElementById('productionSummaryApp').style.display = 'none';
+        if (appId === 'saleOrder') {
+            document.getElementById('saleOrderApp').style.display = 'block';
+            loadSaleOrderList(); loadMasterData(); 
+        } else if (appId === 'fiberIssue') {
+            document.getElementById('fiberIssueApp').style.display = 'block';
+            loadFiberIssueList();
+        } else if (appId === 'productionSummary') {
+            document.getElementById('productionSummaryApp').style.display = 'block';
+            loadProductionSummary();
+        }
+    }
+
+    async function loadProductionSummary() {
+        const tbody = document.getElementById('prodSummaryBody');
+        tbody.innerHTML = "<tr><td colspan='16'>Calculating totals from departments...</td></tr>";
+        try {
+            const orderResp = await fetch(`${API_URL}?Department=SALE_ORDER`);
+            const orders = await orderResp.json();
+            
+            if(!orders || orders.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='16'>No active orders found.</td></tr>";
+                return;
+            }
+
+            const depts = ["MIXING", "CARDING", "DRAWFRAME", "SIMPLEX", "RING", "AUTOCONER", "TFO", "PACKING", "SALE"];
+            const deptData = {};
+            for (const dept of depts) {
+                const resp = await fetch(`${API_URL}?Department=${dept}`);
+                deptData[dept] = await resp.json();
+            }
+
+            tbody.innerHTML = "";
+            orders.reverse().forEach(order => {
+                const poId = String(order["PO ID"]);
+                const status = order["Status"] || 'Pending';
+                const party = order["Party Name"] || 'N/A';
+                
+                const getSum = (deptName) => {
+                    const header = ["PACKING", "SALE"].includes(deptName) ? "Total Net WT" : "Actual Production";
+                    return (deptData[deptName] || [])
+                        .filter(row => String(row["PO ID"]) === poId)
+                        .reduce((sum, row) => sum + (parseFloat(row[header]) || 0), 0);
+                };
+
+                const mixVal = getSum("MIXING");
+                const packVal = getSum("PACKING");
+                const recVal = mixVal > 0 ? ((packVal / mixVal) * 100).toFixed(2) : "0.00";
+
+                tbody.innerHTML += `<tr>
+                    <td style="font-weight:bold">${poId}</td>
+                    <td style="color:${status === 'Closed' || status === 'CLOSE' ? '#c0392b' : '#27ae60'}; font-weight:bold">${status}</td>
+                    <td>${party}</td>
+                    <td>${order["Article"] || ''}</td>
+                    <td>${order["Lot Number"] || ''}</td>
+                    <td style="font-weight:bold">${order["Order Qnty"] || 0}</td>
+                    <td>${mixVal.toFixed(2)}</td>
+                    <td>${getSum("CARDING").toFixed(2)}</td>
+                    <td>${getSum("DRAWFRAME").toFixed(2)}</td>
+                    <td>${getSum("SIMPLEX").toFixed(2)}</td>
+                    <td>${getSum("RING").toFixed(2)}</td>
+                    <td>${getSum("AUTOCONER").toFixed(2)}</td>
+                    <td>${getSum("TFO").toFixed(2)}</td>
+                    <td>${packVal.toFixed(2)}</td>
+                    <td style="background:#e3f2fd; font-weight:bold">${getSum("SALE").toFixed(2)}</td>
+                    <td style="background:#fff3e0; font-weight:bold; color:#e67e22;">${recVal}%</td>
+                </tr>`;
+            });
+        } catch (e) { tbody.innerHTML = "<tr><td colspan='16'>Error loading departmental data.</td></tr>"; }
+    }
+
+    // --- UPDATED FILTER LOGIC: Exact match for CLOSE/PENDING/TO CLOSE ---
+    function filterProductionTable() {
+        const input = document.getElementById("prodSearchInput").value.trim().toUpperCase();
+        const tr = document.getElementById("prodSummaryBody").getElementsByTagName("tr");
+        
+        for (let i = 0; i < tr.length; i++) {
+            const cells = tr[i].getElementsByTagName("td");
+            if (cells.length < 2) continue;
+
+            const statusText = cells[1].textContent.trim().toUpperCase(); // Column 2 is Status
+            const rowText = tr[i].textContent.toUpperCase();
+
+            // Logic: If user types specifically "CLOSE", "PENDING", or "TO CLOSE", 
+            // check for an exact match in the status cell.
+            if (input === "CLOSE" || input === "PENDING" || input === "TO CLOSE") {
+                tr[i].style.display = (statusText === input) ? "" : "none";
+            } else {
+                // Otherwise, perform a standard broad search across the whole row.
+                tr[i].style.display = rowText.includes(input) ? "" : "none";
+            }
+        }
+    }
+
+    function goBack() {
+        document.getElementById('saleOrderApp').style.display = 'none';
+        document.getElementById('fiberIssueApp').style.display = 'none';
+        document.getElementById('productionSummaryApp').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'flex';
+    }
+</script>
+</body>
+</html>

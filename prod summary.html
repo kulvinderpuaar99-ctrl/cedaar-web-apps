@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* All original styles preserved */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center; }
+        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #mainAppWrapper { display: none; }
+        #dashboard { display: flex; height: 100vh; background-color: #2c3e50; }
+        .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .summary-container { flex: 1; padding: 40px; color: white; overflow-y: auto; }
+        .summary-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e67e22; padding-bottom: 10px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        
+        .summary-card { 
+            background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; border-left: 5px solid #e67e22; 
+            cursor: pointer; transition: transform 0.2s; 
+        }
+        .summary-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.15); }
+        .summary-card .value { font-size: 24px; font-weight: bold; color: #e67e22; }
+        .summary-date-picker { padding: 10px; border-radius: 5px; border: none; font-weight: bold; font-size: 14px; cursor: pointer; background: white; }
+
+        /* MODAL STYLES */
+        .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
+        .modal-content { background: #fff; margin: 5% auto; padding: 20px; width: 80%; border-radius: 10px; color: #333; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e67e22; padding-bottom: 10px; margin-bottom: 15px; }
+        .close { font-size: 28px; font-weight: bold; cursor: pointer; color: #c0392b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #2c3e50; color: white; padding: 12px; text-align: left; }
+        td { border-bottom: 1px solid #ddd; padding: 10px; font-size: 14px; }
+        .total-row { background: #fdf2e9; font-weight: bold; border-top: 2px solid #e67e22; }
+        
+        /* PRINT STYLING */
+        @media print {
+            body * { visibility: hidden; }
+            #detailModal, #detailModal *, #modalBody, #modalBody * { visibility: visible; }
+            #detailModal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; height: auto !important; background: white !important; display: block !important; }
+            .modal-content { position: relative !important; margin: 0 !important; padding: 0 !important; width: 100% !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; }
+            #modalBody { overflow: visible !important; height: auto !important; }
+            tfoot { display: table-row-group !important; }
+            .print-btn, .close, .sidebar, #loginOverlay, .nav-btn { display: none !important; }
+            table { width: 100% !important; border: 1px solid #000; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            th { background-color: #eee !important; color: black !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
+        <input type="text" id="userInp" placeholder="Username" style="width:90%; padding:10px; margin-bottom:10px;">
+        <input type="password" id="passInp" placeholder="Password" style="width:90%; padding:10px; margin-bottom:10px;">
+        <button onclick="checkLogin()" class="login-btn">LOGIN</button>
+    </div>
+</div>
+
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle" style="margin:0; color: #2c3e50;">Department Details</h2>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button class="print-btn" onclick="window.print()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🖨️ Print Report</button>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+        </div>
+        <div id="modalBody">
+            <table id="printableTable">
+                <thead>
+                    <tr>
+                        <th>Article / Yarn Description</th>
+                        <th style="text-align: right;">Total Production (KG)</th>
+                    </tr>
+                </thead>
+                <tbody id="detailTableBody"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td style="text-align: right;">GRAND TOTAL:</td>
+                        <td id="grandTotalKg" style="text-align: right; color: #d35400;">0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="mainAppWrapper">
+    <div id="dashboard">
+        <div class="sidebar">
+            <h2 style="color: #e67e22;">CEDAAR ERP</h2>
+            <button class="nav-btn" onclick="fetchSummary()">🔄 Refresh Dashboard</button>
+            <button class="nav-btn" onclick="location.reload()" style="background: #c0392b; margin-top: 20px;">🔒 Logout</button>
+        </div>
+
+        <div class="summary-container">
+            <div class="summary-header">
+                <h1>Production Summary</h1>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label>From:</label>
+                    <input type="date" id="startDate" class="summary-date-picker" onchange="fetchSummary()">
+                    <label>To:</label>
+                    <input type="date" id="endDate" class="summary-date-picker" onchange="fetchSummary()">
+                </div>
+            </div>
+            
+            <div id="summaryLoading" style="display:none; color: #e67e22; font-weight: bold; margin-bottom: 20px;">🔍 SCANNING SHEET FOR DATA...</div>
+            
+            <div class="summary-grid">
+                <div class="summary-card" onclick="showDetails('MIXING')"><h3>Mixing</h3><div class="value" id="sum-MIXING">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('CARDING')"><h3>Carding</h3><div class="value" id="sum-CARDING">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('DRAWFRAME')"><h3>Drawframe</h3><div class="value" id="sum-DRAWFRAME">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('SIMPLEX')"><h3>Simplex</h3><div class="value" id="sum-SIMPLEX">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('RING')"><h3>Ring</h3><div class="value" id="sum-RING">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('AUTOCONER')"><h3>Autoconer</h3><div class="value" id="sum-AUTOCONER">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('TFO')"><h3>TFO</h3><div class="value" id="sum-TFO">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('PACKING')"><h3>Packing</h3><div class="value" id="sum-PACKING">0.00</div></div>
+                <div class="summary-card" onclick="showDetails('SALE')"><h3>Dispatch</h3><div class="value" id="sum-SALE">0.00</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+    
+    let rawDataCache = {};
+
+    window.onload = () => {
+        // Calculate Yesterday's Date
+        const date = new Date();
+        date.setDate(date.getDate() - 1); // Subtract 1 day
+        
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+        document.getElementById('startDate').value = formattedDate;
+        document.getElementById('endDate').value = formattedDate;
+        
+        fetchSummary();
+    };
+
+    function checkLogin() {
+        if (document.getElementById('userInp').value === "admin" && document.getElementById('passInp').value === "cedaar123") {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainAppWrapper').style.display = 'block';
+        }
+    }
+
+    async function fetchSummary() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const loader = document.getElementById('summaryLoading');
+        
+        if (!startDate || !endDate) return;
+        
+        loader.style.display = "block";
+        
+        const depts = ['MIXING', 'CARDING', 'DRAWFRAME', 'SIMPLEX', 'RING', 'AUTOCONER', 'TFO', 'PACKING', 'SALE'];
+        depts.forEach(d => {
+            const el = document.getElementById(`sum-${d}`);
+            if(el) el.innerText = "0.00";
+        });
+
+        try {
+            const promises = depts.map(d => fetch(`${API_URL}?Department=${d}`).then(res => res.json()));
+            const results = await Promise.all(promises);
+
+            results.forEach((data, index) => {
+                const deptName = depts[index];
+                rawDataCache[deptName] = data; 
+                let total = 0;
+
+                data.forEach(row => {
+                    if (row.Date) {
+                        let dObj = new Date(row.Date);
+                        let y = dObj.getFullYear();
+                        let m = ("0" + (dObj.getMonth() + 1)).slice(-2);
+                        let d = ("0" + dObj.getDate()).slice(-2);
+                        let sheetDateStr = `${y}-${m}-${d}`;
+
+                        if (sheetDateStr === "NaN-aN-aN") {
+                           sheetDateStr = String(row.Date).substring(0,10);
+                        }
+
+                        if (sheetDateStr >= startDate && sheetDateStr <= endDate) {
+                            const val = parseFloat(row["Actual Production"] || row["Total Net WT"] || row["Net WT"] || 0);
+                            if (!isNaN(val)) total += val;
+                        }
+                    }
+                });
+                const displayEl = document.getElementById(`sum-${deptName}`);
+                if(displayEl) displayEl.innerText = total.toFixed(2);
+            });
+        } catch (e) { 
+            console.error("Fetch Error:", e); 
+        }
+        loader.style.display = "none";
+    }
+
+    function showDetails(dept) {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const data = rawDataCache[dept] || [];
+        const tableBody = document.getElementById('detailTableBody');
+        const modalTitle = document.getElementById('modalTitle');
+        const grandTotalEl = document.getElementById('grandTotalKg');
+        
+        modalTitle.innerText = `${dept} - Article Summary`;
+        tableBody.innerHTML = "";
+        
+        let groupedData = {};
+        let grandTotal = 0;
+
+        data.forEach(row => {
+            if (!row.Date) return;
+            let dObj = new Date(row.Date);
+            let y = dObj.getFullYear();
+            let m = ("0" + (dObj.getMonth() + 1)).slice(-2);
+            let d = ("0" + dObj.getDate()).slice(-2);
+            let sheetDateStr = `${y}-${m}-${d}`;
+            if (sheetDateStr === "NaN-aN-aN") sheetDateStr = String(row.Date).substring(0,10);
+            
+            if (sheetDateStr >= startDate && sheetDateStr <= endDate) {
+                const article = row["Article"] || row["Description"] || row["Yarn Description"] || "Unknown Article";
+                const kg = parseFloat(row["Actual Production"] || row["Total Net WT"] || row["Net WT"] || 0);
+
+                if (!isNaN(kg)) {
+                    if (!groupedData[article]) groupedData[article] = 0;
+                    groupedData[article] += kg;
+                    grandTotal += kg;
+                }
+            }
+        });
+
+        const articles = Object.keys(groupedData);
+        if (articles.length === 0) {
+            tableBody.innerHTML = "<tr><td colspan='2' style='text-align:center;'>No records found for selected period.</td></tr>";
+            grandTotalEl.innerText = "0.00";
+        } else {
+            articles.forEach(art => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: bold;">${art}</td>
+                    <td style="color:#e67e22; font-weight:bold; text-align: right;">${groupedData[art].toFixed(2)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            grandTotalEl.innerText = grandTotal.toFixed(2);
+        }
+
+        document.getElementById('detailModal').style.display = "block";
+    }
+
+    function closeModal() {
+        document.getElementById('detailModal').style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        let modal = document.getElementById('detailModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+</body>
+</html>

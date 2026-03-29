@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* --- ALL ORIGINAL STYLES UNCHANGED --- */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-card { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 320px; text-align: center; }
+        .login-card h2 { margin-top: 0; color: #2c3e50; border: none; padding: 0; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .login-btn { width: 100%; padding: 12px; background: #e67e22; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        
+        #mainAppWrapper { display: none; }
+        #dashboard { display: flex; height: 100vh; background-color: #2c3e50; }
+        .sidebar { width: 300px; background: rgba(44, 62, 80, 0.9); color: white; padding: 20px; display: flex; flex-direction: column; box-shadow: 4px 0 15px rgba(0,0,0,0.5); }
+        .nav-btn { background: #34495e; color: white; border: none; padding: 15px; margin-bottom: 12px; border-radius: 8px; text-align: left; cursor: pointer; font-size: 14px; font-weight: bold; }
+        
+        #stockApp { display: none; padding: 10px; flex: 1; overflow-y: auto; background: #f0f4f8; height: 100vh; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); max-width: 100%; margin: 0 auto; }
+        h2 { color: #2c3e50; border-left: 5px solid #e67e22; padding-left: 15px; margin-bottom: 10px; font-size: 20px; }
+        
+        .filter-bar { 
+            display: flex; gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; 
+            margin-bottom: 15px; align-items: center; border: 1px solid #dee2e6; flex-wrap: wrap;
+        }
+        .total-box { 
+            background: #2c3e50; color: white; padding: 8px 15px; 
+            border-radius: 8px; text-align: center; min-width: 120px; font-size: 11px;
+        }
+        .total-box span { display: block; font-size: 16px; font-weight: bold; color: #e67e22; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
+        th { background: #34495e; color: white; padding: 8px; text-align: center; border: 1px solid #455a64; }
+        td { padding: 6px; border: 1px solid #dee2e6; text-align: center; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        .back-btn { background:#2c3e50; border:none; color:white; padding: 8px 15px; border-radius: 5px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
+        .refresh-btn { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .print-btn { background: #2980b9; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        
+        .open-head { background: #27ae60 !important; }
+        .pack-head { background: #2980b9 !important; }
+        .sale-head { background: #c0392b !important; }
+        .stock-head { background: #8e44ad !important; }
+
+        .search-input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; width: 140px; font-size: 12px; }
+
+        /* --- PRINT LOGIC: SHOW TOTAL ONLY ON LAST PAGE --- */
+        @media print {
+            .sidebar, .filter-bar, .back-btn, .refresh-btn, .print-btn { display: none !important; }
+            
+            /* Hide columns: Order Qty (6), Opening (7,8,9), Packing (10,11,12), Sale (13,14,15) */
+            th:nth-child(6), td:nth-child(6), 
+            .open-head, .pack-head, .sale-head,
+            tbody td:nth-child(7), tbody td:nth-child(8), tbody td:nth-child(9),
+            tbody td:nth-child(10), tbody td:nth-child(11), tbody td:nth-child(12),
+            tbody td:nth-child(13), tbody td:nth-child(14), tbody td:nth-child(15) {
+                display: none !important;
+            }
+
+            th[colspan="3"] { display: none !important; }
+
+            #stockApp { padding: 0; background: white; height: auto; width: 100%; }
+            .container { box-shadow: none; border: none; padding: 0; }
+            table { width: 100%; font-size: 11pt; border: 1px solid black; }
+            th, td { border: 1px solid black !important; color: black !important; background: white !important; }
+            h2 { text-align: center; border: none; }
+            h2:after { content: " - STOCK REPORT"; }
+
+            /* Forces footer to only appear once at the end of the table */
+            tfoot { display: table-row-group !important; } 
+            .hide-print-total { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-card">
+        <h2 style="color: #e67e22;">CEDAAR LOGIN</h2>
+        <input type="text" id="userInp" class="login-input" placeholder="Username">
+        <input type="password" id="passInp" class="login-input" placeholder="Password">
+        <button onclick="checkLogin()" class="login-btn">LOGIN</button>
+    </div>
+</div>
+
+<div id="mainAppWrapper">
+    <div id="dashboard">
+        <div class="sidebar">
+            <div class="menu-title">Main Menu</div>
+            <button class="nav-btn" onclick="showStockBalance()" style="background: #8e44ad;">📦 Stock Balance</button>
+            <button class="nav-btn" onclick="location.reload()" style="background: #c0392b; margin-top: 20px;">🔒 Logout</button>
+        </div>
+        <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+             <h1 style="color:white; opacity:0.1; font-size:50px;">CEDAAR TEXTILE LIMITED</h1>
+        </div>
+    </div>
+
+    <div id="stockApp">
+        <button onclick="goBack()" class="back-btn">← Return to Dashboard</button>
+        <div class="container">
+            <h2>Article-Wise Stock Balance</h2>
+            
+            <div class="filter-bar">
+                <div style="display:flex; flex-direction:column;"><label style="font-size:10px; font-weight:bold;">MONTH</label><input type="month" id="reportMonth" class="search-input" onchange="showStockBalance()"></div>
+                <div style="display:flex; flex-direction:column;"><label style="font-size:10px; font-weight:bold;">PO ID</label><input type="text" id="poSearch" class="search-input" onkeyup="applyStockFilter()"></div>
+                <div style="display:flex; flex-direction:column;"><label style="font-size:10px; font-weight:bold;">ARTICLE</label><input type="text" id="artSearch" class="search-input" onkeyup="applyStockFilter()"></div>
+                <div style="display:flex; flex-direction:column;"><label style="font-size:10px; font-weight:bold;">LOT</label><input type="text" id="lotSearch" class="search-input" onkeyup="applyStockFilter()"></div>
+                
+                <div style="display:flex; align-items:center; gap:5px; margin-top: 15px;">
+                    <input type="checkbox" id="hideZeroCheck" onchange="applyStockFilter()" checked>
+                    <label style="font-size:11px; font-weight:bold;">Hide Zero</label>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 5px;">
+                    <button class="refresh-btn" onclick="showStockBalance()">🔄 Refresh</button>
+                    <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-left: auto;">
+                    <div class="total-box">NET STOCK<span id="grandTotalNet">0.00</span></div>
+                    <div class="total-box">BAG STOCK<span id="grandTotalBag">0</span></div>
+                </div>
+            </div>
+
+            <table id="stockTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">PO ID</th><th rowspan="2">Party Name</th><th rowspan="2">Article</th><th rowspan="2">Shade</th><th rowspan="2">Lot</th><th rowspan="2">Order Qty</th>
+                        <th colspan="3" class="open-head">OPENING</th>
+                        <th colspan="3" class="pack-head">PACKING</th>
+                        <th colspan="3" class="sale-head">SALE</th>
+                        <th colspan="3" class="stock-head">CURRENT STOCK</th>
+                    </tr>
+                    <tr>
+                        <th class="open-head">Net</th><th class="open-head">Gross</th><th class="open-head">Bags</th>
+                        <th class="pack-head">Net</th><th class="pack-head">Gross</th><th class="pack-head">Bags</th>
+                        <th class="sale-head">Net</th><th class="sale-head">Gross</th><th class="sale-head">Bags</th>
+                        <th class="stock-head">Bags</th><th class="stock-head">Net Bal</th><th class="stock-head">Gross Bal</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTableBody"></tbody>
+                <tfoot id="stockTableFoot"></tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbybNtCkYArFfsMpSlkN4WrpXAsohYbiqfI6P4wn7b_Elsqn9uE5uIP89VyZlSdm7bbbHw/exec';
+    let fullStockData = []; 
+
+    window.onload = () => { document.getElementById('reportMonth').value = new Date().toISOString().slice(0, 7); };
+
+    function checkLogin() {
+        if (document.getElementById('userInp').value === "admin" && document.getElementById('passInp').value === "cedaar123") {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainAppWrapper').style.display = 'block';
+        }
+    }
+
+    function goBack() { document.getElementById('stockApp').style.display = 'none'; document.getElementById('dashboard').style.display = 'flex'; }
+
+    async function showStockBalance() {
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('stockApp').style.display = 'block';
+        const selectedMonth = document.getElementById('reportMonth').value;
+
+        try {
+            const [packResp, saleResp, orderResp] = await Promise.all([
+                fetch(`${API_URL}?Department=PACKING`), fetch(`${API_URL}?Department=SALE`), fetch(`${API_URL}?Department=SALE_ORDER`)
+            ]);
+
+            const packingData = await packResp.json();
+            const saleData = await saleResp.json();
+            const orderData = await orderResp.json();
+
+            let orderQtyMap = {};
+            let partyNameMap = {};
+            orderData.forEach(row => { 
+                const oKey = `${row["PO ID"]}_${row["Article"]}`;
+                orderQtyMap[oKey] = (orderQtyMap[oKey] || 0) + (parseFloat(row["Order Qnty"]) || 0); 
+                partyNameMap[row["PO ID"]] = row["Party Name"] || '-';
+            });
+
+            let stockSummary = {};
+            const getNet = (row) => parseFloat(row["Actual Production"]) || parseFloat(row["Total Net WT"]) || parseFloat(row["Net WT"]) || 0;
+            const getGross = (row) => parseFloat(row["Total Gross WT"]) || parseFloat(row["Gross WT"]) || 0;
+            const getBox = (row) => parseFloat(row["Box"]) || 0;
+
+            packingData.forEach(row => {
+                const key = `${row["PO ID"]}_${row["Article"]}_${row["Lot Number"]}`;
+                const rowMonth = (row["Date"] || "").slice(0, 7);
+                if (!stockSummary[key]) stockSummary[key] = { po: row["PO ID"], party: partyNameMap[row["PO ID"]] || '-', art: row["Article"], lot: row["Lot Number"], shade: row["Shade Reff."] || '-', orderQty: orderQtyMap[`${row["PO ID"]}_${row["Article"]}`] || 0, oNet: 0, oGross: 0, oBox: 0, pNet: 0, pGross: 0, pBox: 0, sNet: 0, sGross: 0, sBox: 0 };
+                if (rowMonth < selectedMonth) { stockSummary[key].oNet += getNet(row); stockSummary[key].oGross += getGross(row); stockSummary[key].oBox += getBox(row); }
+                else if (rowMonth === selectedMonth) { stockSummary[key].pNet += getNet(row); stockSummary[key].pGross += getGross(row); stockSummary[key].pBox += getBox(row); }
+            });
+
+            saleData.forEach(row => {
+                const key = `${row["PO ID"]}_${row["Article"]}_${row["Lot Number"]}`;
+                const rowMonth = (row["Date"] || "").slice(0, 7);
+                if (!stockSummary[key]) stockSummary[key] = { po: row["PO ID"], party: partyNameMap[row["PO ID"]] || '-', art: row["Article"], lot: row["Lot Number"], shade: row["Shade Reff."] || '-', orderQty: orderQtyMap[`${row["PO ID"]}_${row["Article"]}`] || 0, oNet: 0, oGross: 0, oBox: 0, pNet: 0, pGross: 0, pBox: 0, sNet: 0, sGross: 0, sBox: 0 };
+                if (rowMonth < selectedMonth) { stockSummary[key].oNet -= getNet(row); stockSummary[key].oGross -= getGross(row); stockSummary[key].oBox -= getBox(row); }
+                else if (rowMonth === selectedMonth) { stockSummary[key].sNet += getNet(row); stockSummary[key].sGross += getGross(row); stockSummary[key].sBox += getBox(row); }
+            });
+
+            fullStockData = Object.values(stockSummary);
+            applyStockFilter();
+        } catch (e) { console.error(e); }
+    }
+
+    function applyStockFilter() {
+        const poVal = document.getElementById('poSearch').value.toUpperCase();
+        const artVal = document.getElementById('artSearch').value.toUpperCase();
+        const lotVal = document.getElementById('lotSearch').value.toUpperCase();
+        const hideZero = document.getElementById('hideZeroCheck').checked;
+        const tbody = document.getElementById('stockTableBody');
+        const tfoot = document.getElementById('stockTableFoot');
+        tbody.innerHTML = "";
+        tfoot.innerHTML = "";
+
+        let tNet = 0; let tBag = 0; let tGross = 0;
+
+        fullStockData.forEach(item => {
+            if (String(item.po).toUpperCase().includes(poVal) && String(item.art).toUpperCase().includes(artVal) && String(item.lot).toUpperCase().includes(lotVal)) {
+                const bNet = item.oNet + item.pNet - item.sNet;
+                const bGross = item.oGross + item.pGross - item.sGross;
+                const bBox = item.oBox + item.pBox - item.sBox;
+                if (hideZero && bNet.toFixed(2) === "0.00") return;
+
+                tNet += bNet; tBag += bBox; tGross += bGross;
+
+                tbody.innerHTML += `<tr>
+                    <td>${item.po}</td><td>${item.party}</td><td>${item.art}</td><td>${item.shade}</td><td>${item.lot}</td><td>${item.orderQty.toFixed(2)}</td>
+                    <td>${item.oNet.toFixed(2)}</td><td>${item.oGross.toFixed(2)}</td><td>${item.oBox}</td>
+                    <td>${item.pNet.toFixed(2)}</td><td>${item.pGross.toFixed(2)}</td><td>${item.pBox}</td>
+                    <td>${item.sNet.toFixed(2)}</td><td>${item.sGross.toFixed(2)}</td><td>${item.sBox}</td>
+                    <td style="font-weight:bold;">${bBox}</td><td style="font-weight:bold;">${bNet.toFixed(2)}</td><td style="font-weight:bold;">${bGross.toFixed(2)}</td>
+                </tr>`;
+            }
+        });
+
+        tfoot.innerHTML = `<tr style="background:#f1f1f1; font-weight:bold;">
+            <td colspan="5" style="text-align:right;">GRAND TOTAL:</td>
+            <td class="hide-print-total"></td>
+            <td class="hide-print-total"></td><td class="hide-print-total"></td><td class="hide-print-total"></td>
+            <td class="hide-print-total"></td><td class="hide-print-total"></td><td class="hide-print-total"></td>
+            <td class="hide-print-total"></td><td class="hide-print-total"></td><td class="hide-print-total"></td>
+            <td style="background:#8e44ad; color:white;">${tBag}</td>
+            <td style="background:#8e44ad; color:white;">${tNet.toFixed(2)}</td>
+            <td style="background:#8e44ad; color:white;">${tGross.toFixed(2)}</td>
+        </tr>`;
+
+        document.getElementById('grandTotalNet').innerText = tNet.toFixed(2);
+        document.getElementById('grandTotalBag').innerText = tBag;
+    }
+</script>
+</body>
+</html>
