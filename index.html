@@ -3,151 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEDAAR - Production System Login</title>
+    <title>CEDAAR - Production Control Center</title>
     <style>
+        :root {
+            --cedaar-orange: #e67e22;
+            --dark-bg: #121212;
+            --card-bg: #1e1e1e;
+            --text-gray: #b3b3b3;
+        }
+
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            min-height: 100vh;
         }
 
-        /* Black Navigation Bar */
-        nav {
-            background-color: #000000;
-            padding: 15px;
+        /* Animated Header */
+        header {
+            background: linear-gradient(145deg, #000000, #222);
+            padding: 40px 20px;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border-bottom: 3px solid var(--cedaar-orange);
         }
-        
-        nav span {
-            color: #ffffff;
-            font-size: 20px;
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: 3px;
+            color: white;
+        }
+
+        header p {
+            color: var(--cedaar-orange);
+            margin-top: 10px;
             font-weight: bold;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        /* Login Container */
-        .login-container {
-            flex: 1;
+        /* Dashboard Grid */
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            flex-grow: 1;
+        }
+
+        /* Stylish Cards */
+        .dept-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
         }
 
-        .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 350px;
-            text-align: center;
+        .dept-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--cedaar-orange);
+            background: #252525;
+            box-shadow: 0 10px 30px rgba(230, 126, 34, 0.2);
         }
 
-        .login-card h2 {
-            color: #e67e22; /* Cedaar Theme Orange */
-            margin-bottom: 5px;
-        }
-
-        .login-card p {
-            font-size: 13px;
-            color: #7f8c8d;
-            margin-bottom: 25px;
-        }
-
-        /* Input Styles */
-        .login-input, .login-select {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box; /* Ensures padding doesn't break width */
-            font-size: 14px;
-        }
-
-        .login-select {
-            background-color: #fff;
-            cursor: pointer;
-        }
-
-        /* Login Button */
-        .btn-login {
-            width: 100%;
-            padding: 12px;
-            background-color: #e67e22;
+        .dept-card h3 {
+            margin: 15px 0 10px 0;
+            font-size: 1.4rem;
             color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s;
         }
 
-        .btn-login:hover {
-            background-color: #d35400;
+        .dept-card p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        /* Icon Placeholder (Circle) */
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            background: #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--cedaar-orange);
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .dept-card:hover .icon-circle {
+            background: var(--cedaar-orange);
+            color: white;
         }
 
         footer {
-            padding: 15px;
             text-align: center;
-            font-size: 12px;
-            color: #95a5a6;
+            padding: 30px;
+            font-size: 0.8rem;
+            color: #555;
+            border-top: 1px solid #222;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.8rem; }
+            .container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <nav>
-        <span>CEDAAR TEXTILE LIMITED</span>
-    </nav>
+    <header>
+        <h1>CEDAAR</h1>
+        <p>Production Planning & Control</p>
+    </header>
 
-    <div class="login-container">
-        <div class="login-card">
-            <h2>SYSTEM LOGIN</h2>
-            <p>Please enter credentials and select department</p>
+    <div class="container">
+        
+        <a href="raw-material.html" class="dept-card">
+            <div class="icon-circle">📦</div>
+            <h3>Raw Material</h3>
+            <p>Receipt & Issue Logs</p>
+        </a>
 
-            <input type="text" id="userInp" class="login-input" placeholder="Username">
-            <input type="password" id="passInp" class="login-input" placeholder="Password">
+        <a href="yarn-stock.html" class="dept-card">
+            <div class="icon-circle">🧵</div>
+            <h3>Yarn Stock</h3>
+            <p>Inventory Management</p>
+        </a>
 
-            <label style="display:block; text-align:left; font-size:12px; margin-bottom:5px; color:#2c3e50;">Target Department:</label>
-            <select id="deptSelect" class="login-select">
-                <option value="raw-material.html">Raw Material Section</option>
-                <option value="yarn-stock.html">Yarn Stock Management</option>
-                <option value="dye-house.html">Dye House Production</option>
-                <option value="production-summary.html">Production Summary</option>
-                <option value="production-tracking.html">Manpower Tracking</option>
-                <option value="sales-order.html">Sales Order Entry</option>
-            </select>
+        <a href="dye-house.html" class="dept-card">
+            <div class="icon-circle">🧪</div>
+            <h3>Dye House</h3>
+            <p>Production Bookings</p>
+        </a>
 
-            <button class="btn-login" onclick="handleLogin()">LOGIN TO SYSTEM</button>
-        </div>
+        <a href="production-summary.html" class="dept-card">
+            <div class="icon-circle">📊</div>
+            <h3>Prod. Summary</h3>
+            <p>Mill Performance Overview</p>
+        </a>
+
+        <a href="production-tracking.html" class="dept-card">
+            <div class="icon-circle">👥</div>
+            <h3>Manpower</h3>
+            <p>Worker Deployment Tracking</p>
+        </a>
+
+        <a href="sales-order.html" class="dept-card">
+            <div class="icon-circle">📝</div>
+            <h3>Sales Order</h3>
+            <p>New Order Entry System</p>
+        </a>
+
     </div>
 
     <footer>
-        &copy; 2026 Cedaar Textile Limited - Production Planning & Control
+        &copy; 2026 CEDAAR TEXTILE LIMITED | INDUSTRIAL WEB INTERFACE
     </footer>
-
-    <script>
-        function handleLogin() {
-            const user = document.getElementById('userInp').value;
-            const pass = document.getElementById('passInp').value;
-            const targetPage = document.getElementById('deptSelect').value;
-
-            // Simple check: In a real system, you would verify this against a database
-            if (user !== "" && pass !== "") {
-                // Redirects to the selected department file
-                window.location.href = targetPage;
-            } else {
-                alert("Please enter both Username and Password to proceed.");
-            }
-        }
-    </script>
 
 </body>
 </html>
