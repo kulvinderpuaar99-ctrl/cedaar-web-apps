@@ -3,127 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEDAAR TEXTILE LIMITED - Production Control Center</title>
+    <title>CEDAAR TEXTILE LIMITED - Production Control</title>
     <style>
         :root {
             --cedaar-orange: #e67e22;
-            --dark-bg: #121212;
-            --card-bg: #1e1e1e;
-            --text-gray: #b3b3b3;
+            --bg-dark: #0a0a0b;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--dark-bg);
-            color: white;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #1c1c1e 0%, var(--bg-dark) 100%);
+            color: #ffffff;
             min-height: 100vh;
         }
 
-        /* Animated Header */
         header {
-            background: linear-gradient(145deg, #000000, #222);
-            padding: 40px 20px;
             text-align: center;
-            border-bottom: 3px solid var(--cedaar-orange);
+            padding: 60px 20px;
+            border-bottom: 1px solid var(--border-color);
         }
 
         header h1 {
             margin: 0;
-            font-size: 2.5rem;
-            letter-spacing: 3px;
-            color: white;
+            font-size: 2.2rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
         }
 
         header p {
             color: var(--cedaar-orange);
-            margin-top: 10px;
             font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-top: 10px;
+            letter-spacing: 2px;
         }
 
-        /* Dashboard Grid */
-        .container {
-            max-width: 1100px;
+        /* The Grid Container - Makes Boxes Fit Automatically */
+        .dashboard-grid {
+            max-width: 1200px;
             margin: 40px auto;
-            padding: 0 20px;
+            padding: 0 25px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            flex-grow: 1;
+            /* auto-fill ensures boxes stay a consistent size and wrap when needed */
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
         }
 
-        /* Stylish Cards */
-        .dept-card {
+        /* Stylish Glass Box */
+        .box {
             background: var(--card-bg);
-            border-radius: 15px;
-            padding: 30px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 35px 20px;
             text-align: center;
             text-decoration: none;
             color: white;
-            transition: all 0.3s ease;
-            border: 1px solid #333;
+            transition: all 0.3s ease-in-out;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
         }
 
-        .dept-card:hover {
-            transform: translateY(-10px);
+        .box:hover {
+            transform: translateY(-8px);
+            background: rgba(230, 126, 34, 0.1);
             border-color: var(--cedaar-orange);
-            background: #252525;
-            box-shadow: 0 10px 30px rgba(230, 126, 34, 0.2);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5), 
+                        0 0 15px rgba(230, 126, 34, 0.2);
         }
 
-        .dept-card h3 {
-            margin: 15px 0 10px 0;
-            font-size: 1.4rem;
-            color: white;
+        .icon-wrap {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
         }
 
-        .dept-card p {
-            font-size: 0.9rem;
-            color: var(--text-gray);
+        .box:hover .icon-wrap {
+            transform: scale(1.2);
+        }
+
+        .box h3 {
+            margin: 10px 0 5px 0;
+            font-size: 1.3rem;
+            letter-spacing: 1px;
+        }
+
+        .box p {
+            font-size: 0.85rem;
+            color: #888;
             margin: 0;
-        }
-
-        /* Icon Placeholder (Circle) */
-        .icon-circle {
-            width: 60px;
-            height: 60px;
-            background: #333;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--cedaar-orange);
-            margin-bottom: 10px;
-            transition: 0.3s;
-        }
-
-        .dept-card:hover .icon-circle {
-            background: var(--cedaar-orange);
-            color: white;
         }
 
         footer {
             text-align: center;
-            padding: 30px;
-            font-size: 0.8rem;
-            color: #555;
-            border-top: 1px solid #222;
+            padding: 50px 20px;
+            font-size: 0.75rem;
+            color: #444;
+            letter-spacing: 1px;
         }
 
-        /* Mobile Adjustments */
-        @media (max-width: 600px) {
-            header h1 { font-size: 1.8rem; }
-            .container { grid-template-columns: 1fr; }
+        /* Mobile Specific Adjustment */
+        @media (max-width: 500px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr; /* Single column on small phones */
+            }
         }
     </style>
 </head>
@@ -134,53 +124,54 @@
         <p>Production Planning & Control</p>
     </header>
 
-    <div class="container">
+    <div class="dashboard-grid">
         
-        <a href="production-booking.html" class="dept-card">
-            <div class="icon-circle">📦</div>
-            <h3>Spinning 4 </h3>
-            <p>Production Booking</p>
+        <a href="production-booking.html" class="box">
+            <div class="icon-wrap">🧶</div>
+            <h3>Spinning 4</h3>
+            <p>Production Entry</p>
         </a>
 
-                <a href="yarn-stock.html" class="dept-card">
-            <div class="icon-circle">🧵</div>
+        <a href="yarn-stock.html" class="box">
+            <div class="icon-wrap">🧵</div>
             <h3>Yarn Stock</h3>
-            <p>Inventory Management</p>
+            <p>Live Inventory</p>
         </a>
 
-        <a href="dye-house.html" class="dept-card">
-            <div class="icon-circle">🧪</div>
+        <a href="dye-house.html" class="box">
+            <div class="icon-wrap">🧪</div>
             <h3>Dye House</h3>
-            <p>Production Bookings</p>
+            <p>Process Tracking</p>
         </a>
 
-        <a href="production-summary.html" class="dept-card">
-            <div class="icon-circle">📊</div>
+        <a href="production-summary.html" class="box">
+            <div class="icon-wrap">📊</div>
             <h3>Prod. Summary</h3>
-            <p>Mill Performance Overview</p>
+            <p>Mill Performance</p>
         </a>
 
-        <a href="production-tracking.html" class="dept-card">
-            <div class="icon-circle">👥</div>
-            <h3>Order Track</h3>
-            <p>Worker Deployment Tracking</p>
+        <a href="production-tracking.html" class="box">
+            <div class="icon-wrap">📋</div>
+            <h3>Sale Order Track</h3>
+            <p>Worker Deployment</p>
         </a>
 
-        <a href="sales-order.html" class="dept-card">
-            <div class="icon-circle">📝</div>
+        <a href="sales-order.html" class="box">
+            <div class="icon-wrap">📝</div>
             <h3>Sales Order</h3>
-            <p>New Order Entry System</p>
+            <p>Order Management</p>
         </a>
-        <a href="raw-material.html" class="dept-card">
-            <div class="icon-circle">📦</div>
+
+        <a href="raw-material.html" class="box">
+            <div class="icon-wrap">📦</div>
             <h3>Raw Material</h3>
-            <p>Receipt & Issue Logs</p>
+            <p>Issues & Receipts</p>
         </a>
 
     </div>
 
     <footer>
-        &copy; 2026 CEDAAR TEXTILE LIMITED | INDUSTRIAL WEB INTERFACE
+        &copy; 2026 CEDAAR TEXTILE LIMITED | PPC DIGITAL CONTROL
     </footer>
 
 </body>
