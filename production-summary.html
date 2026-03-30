@@ -166,9 +166,21 @@
     };
 
     function checkLogin() {
-        if (document.getElementById('userInp').value === "admin" && document.getElementById('passInp').value === "Kp@123") {
+        const user = document.getElementById('userInp').value;
+        const pass = document.getElementById('passInp').value;
+
+        // Define your authorized users here
+        const authorizedUsers = {
+            "admin": "Kp@123",
+            "prod": "123",
+            "sale": "sale@123"
+        };
+
+        if (authorizedUsers[user] && authorizedUsers[user] === pass) {
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('mainAppWrapper').style.display = 'block';
+        } else {
+            alert("Invalid Username or Password. Please try again.");
         }
     }
 
